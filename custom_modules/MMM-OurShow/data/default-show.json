@@ -1,0 +1,28 @@
+{
+  "showTitle": "The Last of Us",
+  "watchedOn": "2026-02-13",
+  "summary": "We stayed in, watched this together, and argued over who had the best scene.",
+  "poster": "https://placehold.co/1000x360/1e2538/faf8ff?text=The+Last+of+Us",
+  "cast": [
+    {
+      "name": "Pedro Pascal",
+      "character": "Joel",
+      "image": "https://placehold.co/220x280/2d3c5d/faf8ff?text=Pedro"
+    },
+    {
+      "name": "Bella Ramsey",
+      "character": "Ellie",
+      "image": "https://placehold.co/220x280/3d2d56/faf8ff?text=Bella"
+    },
+    {
+      "name": "Anna Torv",
+      "character": "Tess",
+      "image": "https://placehold.co/220x280/5b2f43/faf8ff?text=Anna"
+    },
+    {
+      "name": "Gabriel Luna",
+      "character": "Tommy",
+      "image": "https://placehold.co/220x280/2d4f4c/faf8ff?text=Gabriel"
+    }
+  ]
+}

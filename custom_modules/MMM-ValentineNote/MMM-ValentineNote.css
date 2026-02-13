@@ -1,0 +1,61 @@
+.mmm-valentine-note {
+  position: relative;
+  min-width: 430px;
+  max-width: 660px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(140deg, rgba(255, 120, 155, 0.2), rgba(255, 171, 110, 0.12));
+  padding: 16px 18px 26px;
+}
+
+.mmm-valentine-note__title {
+  font-size: 21px;
+  font-weight: 700;
+  color: #ffe1e8;
+  margin-bottom: 6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mmm-valentine-note__body {
+  font-size: 28px;
+  line-height: 1.25;
+  color: #fff7f9;
+  max-width: 92%;
+}
+
+.mmm-valentine-note__hearts {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.mmm-valentine-note__heart {
+  position: absolute;
+  bottom: -10px;
+  color: #ff8fa8;
+  opacity: 0;
+  font-size: 15px;
+  text-shadow: 0 0 12px rgba(255, 143, 168, 0.8);
+  animation-name: mmm-valentine-float;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in;
+}
+
+@keyframes mmm-valentine-float {
+  0% {
+    transform: translateY(0) scale(0.8) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.8;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-140px) scale(1.2) rotate(12deg);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,207 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap");
+
+:root {
+  --mirror-bg: #000000;
+  --mirror-text: rgba(246, 250, 255, 0.9);
+  --mirror-text-soft: rgba(173, 191, 220, 0.64);
+  --mirror-text-faint: rgba(159, 177, 210, 0.52);
+  --mirror-accent: rgba(150, 223, 255, 0.92);
+}
+
+body {
+  margin: 0;
+  color: var(--mirror-text);
+  background:
+    radial-gradient(900px 500px at 85% -15%, rgba(52, 91, 161, 0.12), transparent 65%),
+    radial-gradient(750px 420px at 10% 100%, rgba(31, 77, 119, 0.1), transparent 68%),
+    var(--mirror-bg);
+  font-family: "Google Sans Text", "Google Sans", "Product Sans", "DM Sans", "Roboto", sans-serif;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 18px rgba(156, 205, 255, 0.08);
+}
+
+.region {
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.top.left {
+  top: 28px;
+  left: 0;
+  width: min(46vw, 900px);
+  padding-left: 40px;
+}
+
+.top.right {
+  top: 28px;
+  right: 0;
+  width: min(34vw, 650px);
+  padding-right: 40px;
+}
+
+.bottom.right {
+  right: 0;
+  bottom: 26px;
+  width: min(34vw, 650px);
+  padding-right: 40px;
+}
+
+.bottom.left {
+  left: 0;
+  bottom: 28px;
+  width: min(46vw, 900px);
+  padding-left: 40px;
+}
+
+.module {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  max-width: 100%;
+}
+
+.module.panel {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.module header {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  color: var(--mirror-text-soft);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.top.right .module {
+  text-align: right;
+}
+
+.top.right .module table {
+  margin-left: auto;
+}
+
+.panel-clock .date {
+  color: rgba(208, 223, 248, 0.9);
+  font-size: clamp(22px, 1.8vw, 32px);
+  line-height: 1.18;
+}
+
+.panel-clock .time {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: clamp(80px, 7.8vw, 122px);
+  line-height: 0.94;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.panel-calendar td {
+  font-size: clamp(18px, 1.42vw, 25px);
+  line-height: 1.24;
+  padding: 2px 0;
+}
+
+.panel-calendar .symbol {
+  width: 25px;
+  opacity: 0.76;
+}
+
+.panel-calendar .title {
+  color: rgba(237, 245, 255, 0.9);
+  padding-right: 8px;
+}
+
+.panel-calendar .time,
+.panel-calendar .time.light,
+.panel-calendar .dimmed {
+  color: var(--mirror-text-faint);
+}
+
+.panel-weather-now .normal,
+.panel-weather-now td {
+  font-size: clamp(24px, 1.8vw, 34px);
+  line-height: 1.08;
+}
+
+.panel-weather-now .large {
+  font-size: clamp(70px, 5.8vw, 100px);
+  line-height: 0.9;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.panel-weather-forecast td {
+  font-size: clamp(18px, 1.3vw, 24px);
+  line-height: 1.18;
+}
+
+.panel-weather-forecast .small,
+.panel-weather-forecast .xsmall,
+.panel-weather-forecast .dimmed,
+.small,
+.xsmall,
+.dimmed {
+  color: var(--mirror-text-faint);
+}
+
+.weather .wi {
+  font-size: 0.88em;
+  opacity: 0.9;
+}
+
+.love-line {
+  margin-bottom: 12px;
+}
+
+.love-line .compliments {
+  color: rgba(242, 249, 255, 0.86);
+  font-size: clamp(26px, 2.25vw, 38px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+  text-align: left;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.love-line .bright,
+.love-line .xlarge,
+.love-line .thin {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.panel-subway {
+  margin-bottom: 0;
+}
+
+.panel-pir {
+  display: none;
+}
+
+@media (max-width: 1600px) {
+  .top.left,
+  .top.right,
+  .bottom.right,
+  .bottom.left {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .panel-clock .time {
+    font-size: clamp(64px, 6.4vw, 92px);
+  }
+
+  .love-line .compliments {
+    font-size: clamp(20px, 1.95vw, 30px);
+  }
+}

@@ -60,22 +60,6 @@ let config = {
       }
     },
     {
-      module: "weather",
-      position: "top_right",
-      header: "Next Up",
-      classes: "panel panel-weather-forecast",
-      config: {
-        weatherProvider: "openmeteo",
-        type: "forecast",
-        lat: 40.7081,
-        lon: -73.9571,
-        maxEntries: 3,
-        colored: false,
-        tableClass: "small",
-        showLocation: false
-      }
-    },
-    {
       module: "compliments",
       position: "bottom_left",
       classes: "love-line",

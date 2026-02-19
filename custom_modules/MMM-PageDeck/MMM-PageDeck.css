@@ -1,0 +1,37 @@
+.mmm-page-deck {
+  min-width: 140px;
+  padding-top: 6px;
+  text-align: center;
+  color: rgba(181, 201, 231, 0.78);
+  letter-spacing: 0.1em;
+}
+
+.mmm-page-deck--paused {
+  opacity: 0.6;
+}
+
+.mmm-page-deck__label {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.mmm-page-deck__dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.mmm-page-deck__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(173, 192, 219, 0.32);
+  box-shadow: 0 0 0 1px rgba(152, 177, 214, 0.24);
+}
+
+.mmm-page-deck__dot--active {
+  background: rgba(214, 229, 249, 0.94);
+  box-shadow: 0 0 0 1px rgba(210, 230, 255, 0.5), 0 0 14px rgba(172, 218, 255, 0.32);
+}

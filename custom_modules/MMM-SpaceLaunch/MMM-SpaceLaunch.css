@@ -1,0 +1,61 @@
+.mmm-space-launch {
+  width: min(36vw, 560px);
+}
+
+.mmm-space-launch__title {
+  margin-bottom: 6px;
+  color: rgba(176, 198, 230, 0.78);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mmm-space-launch__status {
+  color: rgba(164, 183, 213, 0.66);
+  font-size: 16px;
+}
+
+.mmm-space-launch__row {
+  padding: 4px 0;
+  border-top: 1px solid rgba(123, 151, 190, 0.18);
+}
+
+.mmm-space-launch__row:first-child {
+  border-top: 0;
+}
+
+.mmm-space-launch__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mmm-space-launch__mission {
+  color: rgba(233, 241, 253, 0.9);
+  font-size: 21px;
+  line-height: 1.16;
+}
+
+.mmm-space-launch__countdown {
+  color: rgba(154, 207, 247, 0.92);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.mmm-space-launch__meta {
+  margin-top: 1px;
+  color: rgba(153, 174, 208, 0.72);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.mmm-space-launch__footer {
+  margin-top: 6px;
+  color: rgba(146, 170, 205, 0.64);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}

@@ -29,6 +29,23 @@ let config = {
       }
     },
     {
+      module: "MMM-PageDeck",
+      position: "top_center",
+      classes: "panel-pages-indicator",
+      config: {
+        pages: [
+          { id: "main", label: "Air" },
+          { id: "space", label: "Launches" },
+          { id: "moon", label: "Moon" }
+        ],
+        pageDurationMs: 10000,
+        initialDelayMs: 4500,
+        transitionMs: 700,
+        showPageLabel: true,
+        pauseOnSleep: true
+      }
+    },
+    {
       module: "clock",
       position: "top_left",
       classes: "panel panel-clock",
@@ -75,10 +92,33 @@ let config = {
       }
     },
     {
+      module: "MMM-AirPulse",
+      position: "bottom_left",
+      header: "Air",
+      classes: "panel panel-air page-main",
+      config: {
+        title: "Air",
+        lat: 40.7081,
+        lon: -73.9571,
+        refreshInterval: 15 * 60 * 1000
+      }
+    },
+    {
+      module: "MMM-SpaceLaunch",
+      position: "bottom_left",
+      header: "Space",
+      classes: "panel panel-space-launch page-space",
+      config: {
+        title: "Space",
+        refreshInterval: 20 * 60 * 1000,
+        limit: 3
+      }
+    },
+    {
       module: "MMM-SpaceWatch",
       position: "bottom_left",
       header: "Moon Phases",
-      classes: "panel panel-space",
+      classes: "panel panel-space page-moon",
       config: {
         title: "",
         refreshInterval: 30 * 60 * 1000,

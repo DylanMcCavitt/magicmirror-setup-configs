@@ -7,7 +7,11 @@ This project gives you a fast, low-risk MagicMirror setup that works on macOS fi
 - Pinned MagicMirror runtime (`v2.34.0`) bootstrapped into `runtime/MagicMirror`
 - Standard modules configured: clock, calendar, weather
 - Custom modules:
+  - `MMM-PageDeck` (rotating page flow + page indicator)
   - `MMM-MotionWake` (PIR sleep/wake + greeting overlay)
+  - `MMM-AirPulse` (open-meteo air quality)
+  - `MMM-SpaceLaunch` (upcoming launches from SpaceDevs)
+  - `MMM-SpaceWatch` (moon phases)
   - `MMM-OurShow`
   - `MMM-SubwayL`
 - Sync scripts so your editable source stays in this repo (`mirror-config/` and `custom_modules/`)
@@ -47,7 +51,11 @@ or
 - Global mirror theme:
   - `mirror-config/custom.css`
 - Custom modules:
+  - `custom_modules/MMM-PageDeck`
   - `custom_modules/MMM-MotionWake`
+  - `custom_modules/MMM-AirPulse`
+  - `custom_modules/MMM-SpaceLaunch`
+  - `custom_modules/MMM-SpaceWatch`
   - `custom_modules/MMM-OurShow`
   - `custom_modules/MMM-SubwayL`
 
@@ -77,7 +85,17 @@ If no key is configured, the module shows fallback sample times so your layout s
 - Wake trigger: PIR motion on GPIO pin `17` (physical pin `11`)
 - Greeting overlay text: `Good Morning, Bella :)`
 
-`testMode` is set to `false` for normal behavior (sleep window only). Set `testMode: true` temporarily when you want to force a quick wake test outside night hours.
+`testMode` is currently `true` for quick validation. Set `testMode: false` after testing to restore normal behavior (sleep window only).
+
+## Page flow setup
+
+`MMM-PageDeck` rotates page-tagged modules every `10s` using `page-*` classes:
+
+- `page-main`: `MMM-AirPulse`
+- `page-space`: `MMM-SpaceLaunch`
+- `page-moon`: `MMM-SpaceWatch`
+
+Core modules (clock, calendar, weather, subway) remain always visible.
 
 ## Our Show setup
 

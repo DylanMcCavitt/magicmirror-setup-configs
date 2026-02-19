@@ -88,6 +88,22 @@ body {
   margin-left: auto;
 }
 
+.top.center {
+  top: 14px;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.top.center .container {
+  width: 100%;
+  text-align: center;
+}
+
+.panel-pages-indicator {
+  margin: 0;
+}
+
 .panel-clock .date {
   color: rgba(208, 223, 248, 0.9);
   font-size: clamp(22px, 1.8vw, 32px);

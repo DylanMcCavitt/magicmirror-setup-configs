@@ -21,6 +21,7 @@ Module.register("MMM-MotionWake", {
     this.lastSleepWindowState = null;
     this.debugStatus = "";
     this.testModePending = Boolean(this.config.testMode);
+    this.currentWakeState = null;
 
     this.sendSocketNotification("MMM_MOTION_WAKE_START", {
       gpioPin: this.config.gpioPin,
@@ -28,8 +29,17 @@ Module.register("MMM-MotionWake", {
       debug: this.config.debug
     });
 
+    this.setWakeState("awake");
     this.reconcileState();
     this.reconcileTimer = setInterval(() => this.reconcileState(), 1000);
+  },
+
+  setWakeState(state) {
+    if (this.currentWakeState === state) {
+      return;
+    }
+    this.currentWakeState = state;
+    this.sendNotification("MMM_MOTION_WAKE_STATE", { state });
   },
 
   suspend() {
@@ -121,6 +131,7 @@ Module.register("MMM-MotionWake", {
     this.awaitingMotion = true;
     this.overlayState = "sleep";
     this.setModulesHidden(true);
+    this.setWakeState("sleep");
 
     if (this.config.debug) {
       this.debugStatus = reasonText;
@@ -139,6 +150,7 @@ Module.register("MMM-MotionWake", {
     this.awaitingMotion = false;
     this.overlayState = "greeting";
     this.setModulesHidden(true);
+    this.setWakeState("greeting");
     this.updateDom(0);
 
     const greetingDuration = Math.max(1800, Number(this.config.greetingDurationMs) || 5200);
@@ -147,6 +159,7 @@ Module.register("MMM-MotionWake", {
       this.greetingTimer = null;
       this.overlayState = "none";
       this.setModulesHidden(false);
+      this.setWakeState("awake");
       this.updateDom(this.config.transitionMs);
     }, greetingDuration);
   },
@@ -198,6 +211,7 @@ Module.register("MMM-MotionWake", {
 
     if (!this.greetingTimer) {
       this.setModulesHidden(false);
+      this.setWakeState("awake");
     }
   },
 

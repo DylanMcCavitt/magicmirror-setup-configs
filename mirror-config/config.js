@@ -14,6 +14,21 @@ let config = {
       module: "alert"
     },
     {
+      module: "MMM-MotionWake",
+      position: "fullscreen_above",
+      config: {
+        gpioPin: 17,
+        pollIntervalMs: 700,
+        sleepStartHour: 1,
+        wakeHour: 6,
+        greetingText: "good morning bella :)",
+        greetingDurationMs: 5200,
+        transitionMs: 700,
+        testMode: true,
+        debug: false
+      }
+    },
+    {
       module: "clock",
       position: "top_left",
       classes: "panel panel-clock",

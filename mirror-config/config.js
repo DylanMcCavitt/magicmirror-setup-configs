@@ -24,7 +24,7 @@ let config = {
         greetingText: "Good Morning, Bella :)",
         greetingDurationMs: 5200,
         transitionMs: 700,
-        testMode: true,
+        testMode: false,
         debug: false
       }
     },

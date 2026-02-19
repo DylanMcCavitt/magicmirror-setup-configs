@@ -77,7 +77,7 @@ If no key is configured, the module shows fallback sample times so your layout s
 - Wake trigger: PIR motion on GPIO pin `17` (physical pin `11`)
 - Greeting overlay text: `Good Morning, Bella :)`
 
-For immediate testing, `testMode` is set to `true` right now. That forces one sleep-on-start cycle so you can wave at the sensor and verify wake + greeting. After you confirm it works on Pi, set `testMode: false`.
+`testMode` is set to `false` for normal behavior (sleep window only). Set `testMode: true` temporarily when you want to force a quick wake test outside night hours.
 
 ## Our Show setup
 

@@ -4,7 +4,7 @@ Module.register("MMM-MotionWake", {
     pollIntervalMs: 700,
     sleepStartHour: 1,
     wakeHour: 6,
-    greetingText: "good morning bella :)",
+    greetingText: "Good Morning, Bella :)",
     greetingDurationMs: 5200,
     transitionMs: 700,
     testMode: true,

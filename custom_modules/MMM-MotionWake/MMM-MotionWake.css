@@ -22,9 +22,8 @@
   font-size: clamp(44px, 5.2vw, 92px);
   font-weight: 500;
   line-height: 1.04;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-align: center;
-  text-transform: lowercase;
   text-shadow: 0 0 22px rgba(140, 198, 255, 0.16);
   animation: mmm-motion-wake-fade var(--greeting-duration, 5200ms) ease forwards;
 }

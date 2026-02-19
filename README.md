@@ -1,14 +1,13 @@
-# Magic Mirror V-Day Scaffold
+# Magic Mirror Scaffold
 
 This project gives you a fast, low-risk MagicMirror setup that works on macOS first, then moves to Raspberry Pi.
 
 ## What is included
 
 - Pinned MagicMirror runtime (`v2.34.0`) bootstrapped into `runtime/MagicMirror`
-- Standard modules configured: clock, calendar, weather, compliments
+- Standard modules configured: clock, calendar, weather
 - Custom modules:
   - `MMM-MotionWake` (PIR sleep/wake + greeting overlay)
-  - `MMM-ValentineNote`
   - `MMM-OurShow`
   - `MMM-SubwayL`
 - Sync scripts so your editable source stays in this repo (`mirror-config/` and `custom_modules/`)
@@ -48,7 +47,7 @@ or
 - Global mirror theme:
   - `mirror-config/custom.css`
 - Custom modules:
-  - `custom_modules/MMM-ValentineNote`
+  - `custom_modules/MMM-MotionWake`
   - `custom_modules/MMM-OurShow`
   - `custom_modules/MMM-SubwayL`
 
@@ -76,7 +75,7 @@ If no key is configured, the module shows fallback sample times so your layout s
 
 - Sleep window: `1:00 AM` to `6:00 AM`
 - Wake trigger: PIR motion on GPIO pin `17` (physical pin `11`)
-- Greeting overlay text: `good morning bella :)`
+- Greeting overlay text: `Good Morning, Bella :)`
 
 For immediate testing, `testMode` is set to `true` right now. That forces one sleep-on-start cycle so you can wave at the sensor and verify wake + greeting. After you confirm it works on Pi, set `testMode: false`.
 

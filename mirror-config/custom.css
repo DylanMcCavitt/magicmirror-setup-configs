@@ -158,30 +158,6 @@ body {
   opacity: 0.9;
 }
 
-.love-line {
-  margin-bottom: 12px;
-}
-
-.love-line .compliments {
-  color: rgba(242, 249, 255, 0.86);
-  font-size: clamp(26px, 2.25vw, 38px);
-  font-weight: 500;
-  line-height: 1.08;
-  letter-spacing: 0.01em;
-  text-align: left;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.love-line .bright,
-.love-line .xlarge,
-.love-line .thin {
-  font-size: inherit;
-  font-weight: inherit;
-}
-
 .panel-subway {
   margin-bottom: 0;
 }
@@ -203,7 +179,4 @@ body {
     font-size: clamp(64px, 6.4vw, 92px);
   }
 
-  .love-line .compliments {
-    font-size: clamp(20px, 1.95vw, 30px);
-  }
 }

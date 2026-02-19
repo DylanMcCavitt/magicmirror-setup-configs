@@ -21,7 +21,7 @@ let config = {
         pollIntervalMs: 700,
         sleepStartHour: 1,
         wakeHour: 6,
-        greetingText: "good morning bella :)",
+        greetingText: "Good Morning, Bella :)",
         greetingDurationMs: 5200,
         transitionMs: 700,
         testMode: true,
@@ -72,22 +72,6 @@ let config = {
         showSun: false,
         showMoon: false,
         showLocation: false
-      }
-    },
-    {
-      module: "compliments",
-      position: "bottom_left",
-      classes: "love-line",
-      config: {
-        compliments: {
-          anytime: [
-            "you + me, always.",
-            "built with love, for love.",
-            "my favorite view is us."
-          ]
-        },
-        updateInterval: 18000,
-        fadeSpeed: 1200
       }
     },
     {

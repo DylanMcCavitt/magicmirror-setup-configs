@@ -1,9 +1,0 @@
-{
-  "name": "mmm-subway-l",
-  "version": "0.1.0",
-  "description": "L train arrivals for MagicMirror",
-  "main": "node_helper.js",
-  "dependencies": {
-    "gtfs-realtime-bindings": "^1.1.1"
-  }
-}

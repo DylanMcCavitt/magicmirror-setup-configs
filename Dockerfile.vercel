@@ -1,0 +1,9 @@
+FROM node:20-alpine
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY vercel/status-server.mjs ./vercel/status-server.mjs
+
+EXPOSE 80
+CMD ["node", "vercel/status-server.mjs"]

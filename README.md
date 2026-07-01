@@ -1,110 +1,92 @@
-# Magic Mirror Scaffold
+# Magic Mirror Agent Surface
 
-This project gives you a fast, low-risk MagicMirror setup that works on macOS first, then moves to Raspberry Pi.
+This repo is reset to a clean MagicMirror scaffold so the next customization can be built from the ground up.
 
-## What is included
+## Current state
 
 - Pinned MagicMirror runtime (`v2.34.0`) bootstrapped into `runtime/MagicMirror`
-- Standard modules configured: clock, calendar, weather
-- Custom modules:
-  - `MMM-PageDeck` (rotating page flow + page indicator)
-  - `MMM-MotionWake` (PIR sleep/wake + greeting overlay)
-  - `MMM-AirPulse` (open-meteo air quality)
-  - `MMM-SpaceLaunch` (upcoming launches from SpaceDevs)
-  - `MMM-SpaceWatch` (moon phases)
-  - `MMM-OurShow`
-  - `MMM-SubwayL`
-- Sync scripts so your editable source stays in this repo (`mirror-config/` and `custom_modules/`)
+- Minimal config in `mirror-config/config.js`
+- Empty custom stylesheet in `mirror-config/custom.css`
+- No checked-in custom modules
+- Sync scripts keep editable source in this repo and copy it into the runtime
 
-## Can I preview this on my Mac first?
+## Preview on Mac
 
-Yes. You can run the full mirror on macOS without using the Pi.
-
-- Desktop app preview (Electron): `./scripts/run-mac.sh`
-- Browser preview (server only): `./scripts/run-server.sh` then open [http://localhost:8080](http://localhost:8080)
-
-## Quick start
-
-1. Install Node.js LTS (recommended: 20.x or newer) and npm.
-2. From this repo, run:
-
-```bash
-./scripts/bootstrap.sh
-```
-
-3. Start preview:
+Desktop app preview:
 
 ```bash
 ./scripts/run-mac.sh
 ```
 
-or
+Browser preview:
 
 ```bash
 ./scripts/run-server.sh
 ```
 
-## Files you will edit most
+Then open [http://localhost:8080](http://localhost:8080).
 
-- Main mirror layout/config:
-  - `mirror-config/config.js`
-- Global mirror theme:
-  - `mirror-config/custom.css`
-- Custom modules:
-  - `custom_modules/MMM-PageDeck`
-  - `custom_modules/MMM-MotionWake`
-  - `custom_modules/MMM-AirPulse`
-  - `custom_modules/MMM-SpaceLaunch`
-  - `custom_modules/MMM-SpaceWatch`
-  - `custom_modules/MMM-OurShow`
-  - `custom_modules/MMM-SubwayL`
+## Quick start
 
-When you edit these files, run:
+1. Install Node.js LTS, recommended `20.x` or newer.
+2. Bootstrap the pinned MagicMirror runtime:
 
 ```bash
-./scripts/sync.sh
+./scripts/bootstrap.sh
 ```
 
-Then restart MagicMirror.
+3. Start a preview:
 
-## Subway L setup
+```bash
+./scripts/run-mac.sh
+```
 
-`MMM-SubwayL` reads the official MTA GTFS-realtime L feed.
+or:
 
-1. Get an MTA API key.
-2. Set `mtaApiKey` in `mirror-config/config.js`.
-3. Adjust stop IDs under `stops` if needed.
+```bash
+./scripts/run-server.sh
+```
 
-If no key is configured, the module shows fallback sample times so your layout still looks complete.
+## Vercel Docker
 
-## PIR motion wake setup
+This repo includes a minimal Vercel Docker control plane:
 
-`MMM-MotionWake` is configured in `mirror-config/config.js` with:
+- `Dockerfile.vercel`
+- `vercel/status-server.mjs`
 
-- Sleep window: `1:00 AM` to `6:00 AM`
-- Wake trigger: PIR motion on GPIO pin `17` (physical pin `11`)
-- Greeting overlay text: `Good Morning, Bella :)`
+Deploy preview:
 
-`testMode` is currently `true` for quick validation. Set `testMode: false` after testing to restore normal behavior (sleep window only).
+```bash
+vercel deploy
+```
 
-## Page flow setup
+Deploy production:
 
-`MMM-PageDeck` rotates page-tagged modules every `10s` using `page-*` classes:
+```bash
+vercel deploy --prod
+```
 
-- `page-main`: `MMM-AirPulse`
-- `page-space`: `MMM-SpaceLaunch`
-- `page-moon`: `MMM-SpaceWatch`
+Health checks:
 
-Core modules (clock, calendar, weather, subway) remain always visible.
+- `GET /health`
+- `GET /healthz`
+- `GET /status`
 
-## Our Show setup
+The Pi still runs MagicMirror, sensors, voice, and local agent collection. Vercel hosts the HTTP control plane only.
 
-Edit:
+## Files to customize next
 
-- `custom_modules/MMM-OurShow/data/default-show.json`
+- `mirror-config/config.js` — active MagicMirror modules and positions
+- `mirror-config/custom.css` — global visual system
+- `custom_modules/` — future custom modules, created only when the implementation is real
 
-Update show title, watched date, summary, and cast image URLs.
+## Ground-up direction
 
-## Deploy to Pi later
+The next build should make the mirror an agent surface, not a generic dashboard:
 
-Copy this repo to Pi, install Node.js LTS, then run the same scripts (`bootstrap.sh`, `run-mac.sh` or `run-server.sh`).
+- Agent threads: show live or recent agent/session threads, statuses, blockers, and outputs.
+- Voice: local wake/listen/speak controls for asking the mirror about threads or triggering actions.
+- Movement sensor: presence-aware wake/sleep, glance mode, and full detail mode.
+- Agent bus: one local service should broker state between MagicMirror modules, agent/thread sources, voice, and sensors so UI modules stay dumb.
+
+Do not add placeholder modules. Add each capability when the data source and runtime behavior are wired end to end.

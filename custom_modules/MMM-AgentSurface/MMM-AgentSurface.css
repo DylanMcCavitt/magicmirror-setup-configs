@@ -445,3 +445,84 @@
   text-align: right;
   white-space: nowrap;
 }
+
+.mmm-mirror-os__sports {
+  display: grid;
+  gap: 0;
+}
+
+.mmm-mirror-os__sports-warning {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  color: #e0ac4a;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  padding: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__sports-row {
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 3.75rem minmax(0, 1fr) auto 6.5rem;
+  min-height: 52px;
+  padding: 9px 0;
+}
+
+.mmm-mirror-os__sports-league {
+  color: #9aa3ad;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__sports-matchup {
+  min-width: 0;
+}
+
+.mmm-mirror-os__sports-matchup-line {
+  color: #f7f7f2;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__sports-matchup-line strong {
+  font-weight: 700;
+}
+
+.mmm-mirror-os__sports-separator,
+.mmm-mirror-os__sports-names {
+  color: #9aa3ad;
+}
+
+.mmm-mirror-os__sports-names {
+  font-size: 12px;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__sports-score {
+  color: #f7f7f2;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mmm-mirror-os__sports-status {
+  color: #54c6eb;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
+.mmm-mirror-os__sports-row--live .mmm-mirror-os__sports-status {
+  color: #65d18a;
+}
+
+.mmm-mirror-os__sports-row--final .mmm-mirror-os__sports-matchup-line,
+.mmm-mirror-os__sports-row--final .mmm-mirror-os__sports-score,
+.mmm-mirror-os__sports-row--final .mmm-mirror-os__sports-status {
+  color: #9aa3ad;
+}

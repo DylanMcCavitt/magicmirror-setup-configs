@@ -2,5 +2,6 @@
 // each exports { dataSourceId, refreshIntervalSeconds, collect(env, deps) }.
 module.exports = [
   require("./calendar-ics.js"),
-  require("./weather-open-meteo.js")
+  require("./weather-open-meteo.js"),
+  require("./sports-espn.js")
 ];

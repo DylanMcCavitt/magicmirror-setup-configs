@@ -60,6 +60,7 @@ npm run check:sanitizer
 npm run check:shell
 npm run check:control
 npm run check:calendar
+npm run check:sports
 ```
 
 Local snapshot validation:
@@ -92,7 +93,7 @@ Environment/source names:
 - `MIRROR_CALENDAR_ICS_URL` — calendar ICS feed URL (Apple/Google shared or private ICS links work); calendar stays `unconfigured` until this is set. Optional: `MIRROR_CALENDAR_NAME` (display label), `MIRROR_CALENDAR_TIMEZONE` (IANA zone for event times). Feed URLs are never echoed in errors or on screen.
 - `MIRROR_WEATHER_LATITUDE` and `MIRROR_WEATHER_LONGITUDE` — Open-Meteo coordinate source; weather stays `unconfigured` until both are set. Optional: `MIRROR_WEATHER_TIMEZONE` (IANA zone or Open-Meteo timezone value), `MIRROR_WEATHER_LOCATION_LABEL` (display/source label).
 - `MIRROR_PATH_GTFS_RT_URL` and `MIRROR_PATH_STATION_ID` — PATH GTFS-realtime source; PATH stays `unconfigured` until both are set
-- `MIRROR_SPORTS_LEAGUES` and `MIRROR_SPORTS_TEAMS` — sports scoreboard source selectors; sports stays `unconfigured` until both are set
+- `MIRROR_SPORTS_LEAGUES` and `MIRROR_SPORTS_TEAMS` — ESPN scoreboard selectors; sports stays `unconfigured` until both are set. Supported leagues: `nfl`, `mlb`, `nba`. Team selectors match ESPN team abbreviation/display name case-insensitively. Optional: `MIRROR_SPORTS_SOURCE_URL` (base ESPN API URL override), `MIRROR_SPORTS_TIMEZONE` (IANA zone for start times).
 
 Health checks:
 

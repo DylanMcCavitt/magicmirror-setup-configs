@@ -173,13 +173,13 @@ Module.register("MMM-AgentSurface", {
     title.textContent = thread.title || thread.id || "Untitled thread";
     row.appendChild(title);
 
-    var badge = document.createElement("div");
-    badge.className = "mmm-agent-surface__badge";
-    badge.textContent = thread.status || "unknown";
-    row.appendChild(badge);
+    var state = document.createElement("div");
+    state.className = "mmm-agent-surface__state";
+    state.textContent = this.statusGlyph(thread.status) + " " + (thread.status || "unknown");
+    row.appendChild(state);
     card.appendChild(row);
 
-    var details = [thread.agent, thread.repo, thread.phase, this.formatTime(thread.updatedAt)].filter(Boolean);
+    var details = [thread.project, thread.issueId, thread.prId, thread.workstreamId, thread.agent, thread.repo, thread.phase, this.formatTime(thread.updatedAt)].filter(Boolean);
     if (details.length) {
       var detail = document.createElement("div");
       detail.className = "mmm-agent-surface__details";
@@ -202,6 +202,19 @@ Module.register("MMM-AgentSurface", {
     }
 
     return card;
+  },
+
+  statusGlyph: function (status) {
+    var glyphs = {
+      running: "▶",
+      blocked: "×",
+      done: "✓",
+      failed: "!",
+      idle: "·",
+      waiting: "…",
+      unknown: "?"
+    };
+    return glyphs[this.safeClassPart(status)] || glyphs.unknown;
   },
 
   formatTime: function (value) {

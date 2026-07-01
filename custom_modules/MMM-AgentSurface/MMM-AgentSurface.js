@@ -1,4 +1,4 @@
-/* global Module */
+/* global Module, window */
 
 Module.register("MMM-AgentSurface", {
   defaults: {
@@ -36,11 +36,23 @@ Module.register("MMM-AgentSurface", {
     return ["MMM-AgentSurface.css"];
   },
 
+  getScripts: function () {
+    return [this.file("display-sanitizer.js")];
+  },
+
   socketNotificationReceived: function (notification, payload) {
     if (notification === "MMM_AGENT_SURFACE_SNAPSHOT") {
+      if (!window.MMMAgentSurfaceDisplaySanitizer) {
+        this.snapshot = null;
+        this.summary = null;
+        this.error = "Display sanitizer unavailable";
+        this.updateDom(300);
+        return;
+      }
+
       this.error = null;
-      this.snapshot = payload && payload.snapshot ? payload.snapshot : null;
-      this.summary = payload && payload.summary ? payload.summary : null;
+      this.snapshot = window.MMMAgentSurfaceDisplaySanitizer.sanitizeSnapshotForDisplay(payload && payload.snapshot);
+      this.summary = this.snapshot && this.snapshot.summary ? this.snapshot.summary : (payload && payload.summary ? payload.summary : null);
       this.updateDom(300);
       return;
     }

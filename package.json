@@ -7,6 +7,7 @@
     "check:config": "node scripts/check-config.mjs",
     "check:contracts": "node scripts/check-mirror-os-contract.mjs",
     "check:snapshot": "node scripts/check-agent-snapshot.mjs",
+    "check:sanitizer": "node scripts/check-sanitizer.mjs",
     "check:source-state": "node scripts/check-source-state.mjs",
     "check:provenance": "node scripts/check-provenance.mjs",
     "collect:omp-stats": "node scripts/collect-omp-stats.mjs",

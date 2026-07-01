@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const NodeHelper = require("node_helper");
 const shellApi = require("./mirror-os-shell.js");
+const providers = require("./providers/index.js");
 
 const CONTROL_ROUTE_BASE = "/MMM-AgentSurface/api/control";
 const CONTROL_COMMANDS = new Set(["next", "previous", "show", "pause", "resume"]);
@@ -63,13 +64,52 @@ module.exports = NodeHelper.create({
     this.validatorPromise = null;
     this.currentPageState = { ...SAFE_STATE };
     this.configuredPages = null;
+    this.latestSourceData = {};
+    this.providerTimers = [];
     this.registerRoutes();
+    this.startProviderPolling();
+  },
+
+  stop: function () {
+    for (const timer of this.providerTimers) clearInterval(timer);
+    this.providerTimers = [];
+  },
+
+  startProviderPolling: function () {
+    for (const provider of providers) {
+      const run = () => this.collectProvider(provider);
+      run();
+      const timer = setInterval(run, Math.max(30, provider.refreshIntervalSeconds) * 1000);
+      if (typeof timer.unref === "function") timer.unref();
+      this.providerTimers.push(timer);
+    }
+  },
+
+  collectProvider: async function (provider) {
+    let result;
+    try {
+      result = await provider.collect(process.env);
+    } catch (error) {
+      result = { dataSourceId: provider.dataSourceId, state: "error", message: "Source collector failed" };
+    }
+    if (!result || result.dataSourceId !== provider.dataSourceId) {
+      result = { dataSourceId: provider.dataSourceId, state: "error", message: "Source collector returned an invalid result" };
+    }
+    this.latestSourceData[provider.dataSourceId] = result;
+    this.sendSocketNotification("MMM_AGENT_SURFACE_SOURCE_DATA", result);
+  },
+
+  sendAllSourceData: function () {
+    for (const result of Object.values(this.latestSourceData)) {
+      this.sendSocketNotification("MMM_AGENT_SURFACE_SOURCE_DATA", result);
+    }
   },
 
   socketNotificationReceived: function (notification, payload) {
     if (notification === "MMM_AGENT_SURFACE_GET_CURRENT") {
       this.sendCurrentSnapshot();
       this.sendPageState();
+      this.sendAllSourceData();
       return;
     }
 

@@ -66,6 +66,8 @@ function loadHelper() {
       if (name === "node_helper") return fakeNodeHelper;
       if (name === "crypto") return crypto;
       if (name === "./mirror-os-shell.js") return requireMirrorOsShell();
+      // Control checks must not exercise real data-source collectors.
+      if (name === "./providers/index.js") return [];
       throw new Error(`unexpected require: ${name}`);
     }
   };

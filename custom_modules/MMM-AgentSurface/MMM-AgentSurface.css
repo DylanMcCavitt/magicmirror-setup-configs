@@ -277,3 +277,88 @@
   margin-top: 8px;
   overflow-wrap: anywhere;
 }
+
+.mmm-mirror-os__calendar {
+  display: grid;
+  gap: 14px;
+}
+
+.mmm-mirror-os__calendar-next {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 0 14px;
+}
+
+.mmm-mirror-os__calendar-next-when {
+  color: #54c6eb;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__calendar-next-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__calendar-next-where {
+  color: #9aa3ad;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.mmm-mirror-os__calendar-agenda {
+  display: grid;
+  gap: 0;
+}
+
+.mmm-mirror-os__calendar-row {
+  align-items: baseline;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  gap: 14px;
+  min-height: 36px;
+  padding: 7px 0;
+}
+
+.mmm-mirror-os__calendar-when {
+  color: #9aa3ad;
+  flex: 0 0 11rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__calendar-title {
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__calendar-month {
+  display: grid;
+  gap: 2px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  max-width: 22rem;
+}
+
+.mmm-mirror-os__calendar-cell {
+  color: #9aa3ad;
+  font-size: 13px;
+  padding: 3px 0;
+  text-align: center;
+}
+
+.mmm-mirror-os__calendar-cell--head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.08em;
+}
+
+.mmm-mirror-os__calendar-cell--today {
+  color: #f7f7f2;
+  font-weight: 700;
+  outline: 1px solid rgba(255, 255, 255, 0.45);
+}
+
+.mmm-mirror-os__calendar-cell--event {
+  color: #54c6eb;
+}

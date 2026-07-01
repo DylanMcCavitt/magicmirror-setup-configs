@@ -59,6 +59,7 @@ npm run check:provenance
 npm run check:sanitizer
 npm run check:shell
 npm run check:control
+npm run check:calendar
 ```
 
 Local snapshot validation:
@@ -88,7 +89,7 @@ Environment/source names:
 - `MIRROR_LOCAL_UPLOAD_TOKEN` — optional bearer token accepted by the local `MMM-AgentSurface` upload endpoint
 - `MIRROR_AGENT_PROJECT` — optional project label for collected agent work; defaults to `Magic Mirror Agent Surface`
 - `MIRROR_CONTROL_TOKEN` — bearer token required by the local page-control API (`POST /MMM-AgentSurface/api/control`, `GET /MMM-AgentSurface/api/control/state`); `show` commands are validated against the page set the display module actually configured and fail closed (503) until the module has reported its page registry
-- `MIRROR_CALENDAR_ICS_URL` — calendar ICS feed URL; calendar stays `unconfigured` until this is set
+- `MIRROR_CALENDAR_ICS_URL` — calendar ICS feed URL (Apple/Google shared or private ICS links work); calendar stays `unconfigured` until this is set. Optional: `MIRROR_CALENDAR_NAME` (display label), `MIRROR_CALENDAR_TIMEZONE` (IANA zone for event times). Feed URLs are never echoed in errors or on screen.
 - `MIRROR_WEATHER_LATITUDE` and `MIRROR_WEATHER_LONGITUDE` — Open-Meteo coordinate source; weather stays `unconfigured` until both are set
 - `MIRROR_PATH_GTFS_RT_URL` and `MIRROR_PATH_STATION_ID` — PATH GTFS-realtime source; PATH stays `unconfigured` until both are set
 - `MIRROR_SPORTS_LEAGUES` and `MIRROR_SPORTS_TEAMS` — sports scoreboard source selectors; sports stays `unconfigured` until both are set

@@ -57,6 +57,7 @@ npm run check:contracts
 npm run check:source-state
 npm run check:provenance
 npm run check:sanitizer
+npm run check:shell
 ```
 
 Local snapshot validation:

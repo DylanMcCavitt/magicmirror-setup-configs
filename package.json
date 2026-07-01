@@ -13,6 +13,7 @@
     "check:provenance": "node scripts/check-provenance.mjs",
     "check:control": "node scripts/check-control.mjs",
     "check:calendar": "node scripts/check-calendar.mjs",
+    "check:weather": "node scripts/check-weather.mjs",
     "collect:omp-stats": "node scripts/collect-omp-stats.mjs",
     "upload:snapshot": "node scripts/upload-agent-snapshot.mjs",
     "vercel:serve": "node vercel/status-server.mjs"

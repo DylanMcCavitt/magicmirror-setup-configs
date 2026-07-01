@@ -362,3 +362,86 @@
 .mmm-mirror-os__calendar-cell--event {
   color: #54c6eb;
 }
+
+
+.mmm-mirror-os__weather {
+  display: grid;
+  gap: 14px;
+}
+
+.mmm-mirror-os__weather-current {
+  align-items: end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 4px 0 16px;
+}
+
+.mmm-mirror-os__weather-temp {
+  color: #f7f7f2;
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.mmm-mirror-os__weather-details {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mmm-mirror-os__weather-condition {
+  font-size: 24px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__weather-meta {
+  color: #9aa3ad;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__weather-forecast {
+  display: grid;
+  gap: 0;
+}
+
+.mmm-mirror-os__weather-day {
+  align-items: baseline;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 4rem minmax(0, 1fr) auto auto;
+  min-height: 36px;
+  padding: 7px 0;
+}
+
+.mmm-mirror-os__weather-weekday,
+.mmm-mirror-os__weather-precip {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__weather-weekday {
+  color: #9aa3ad;
+}
+
+.mmm-mirror-os__weather-day-condition {
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__weather-range {
+  color: #f7f7f2;
+  white-space: nowrap;
+}
+
+.mmm-mirror-os__weather-precip {
+  color: #54c6eb;
+  text-align: right;
+  white-space: nowrap;
+}

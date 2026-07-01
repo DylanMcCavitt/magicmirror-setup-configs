@@ -349,6 +349,11 @@ Module.register("MMM-AgentSurface", {
         return body;
       }
 
+      if (viewModel.pageId === "weather") {
+        body.appendChild(this.renderWeatherPage(viewModel));
+        return body;
+      }
+
       body.appendChild(this.renderEmptyRow("No renderer for this page yet"));
       return body;
     }
@@ -494,6 +499,107 @@ Module.register("MMM-AgentSurface", {
     } catch (error) {
       delete options.timeZone;
       return new Intl.DateTimeFormat(undefined, options).format(date);
+    }
+  },
+
+  renderWeatherPage: function (viewModel) {
+    var container = document.createElement("div");
+    container.className = "mmm-mirror-os__weather";
+
+    var result = this.sourceData[viewModel.dataSourceId] || {};
+    var data = result.data || {};
+    var current = data.current;
+    var daily = Array.isArray(data.daily) ? data.daily : [];
+
+    if (!current || typeof current !== "object") {
+      container.appendChild(this.renderEmptyRow("Weather data is unavailable."));
+      return container;
+    }
+
+    var currentPanel = document.createElement("div");
+    currentPanel.className = "mmm-mirror-os__weather-current";
+
+    var temp = document.createElement("div");
+    temp.className = "mmm-mirror-os__weather-temp";
+    temp.textContent = this.formatWeatherNumber(current.temperatureF) + "°";
+    currentPanel.appendChild(temp);
+
+    var details = document.createElement("div");
+    details.className = "mmm-mirror-os__weather-details";
+
+    var condition = document.createElement("div");
+    condition.className = "mmm-mirror-os__weather-condition";
+    condition.textContent = this.formatWeatherCondition(current.condition);
+    details.appendChild(condition);
+
+    var metaParts = [];
+    if (current.apparentF !== null && current.apparentF !== undefined) metaParts.push("Feels " + this.formatWeatherNumber(current.apparentF) + "°");
+    if (current.windMph !== null && current.windMph !== undefined) metaParts.push("Wind " + this.formatWeatherNumber(current.windMph) + " mph");
+    if (current.humidityPct !== null && current.humidityPct !== undefined) metaParts.push("Humidity " + this.formatWeatherNumber(current.humidityPct) + "%");
+
+    if (metaParts.length) {
+      var meta = document.createElement("div");
+      meta.className = "mmm-mirror-os__weather-meta";
+      meta.textContent = metaParts.join(" · ");
+      details.appendChild(meta);
+    }
+
+    currentPanel.appendChild(details);
+    container.appendChild(currentPanel);
+
+    if (daily.length === 0) return container;
+
+    var forecast = document.createElement("div");
+    forecast.className = "mmm-mirror-os__weather-forecast";
+    daily.slice(0, 5).forEach(function (day) {
+      var row = document.createElement("div");
+      row.className = "mmm-mirror-os__weather-day";
+
+      var weekday = document.createElement("span");
+      weekday.className = "mmm-mirror-os__weather-weekday";
+      weekday.textContent = this.formatWeatherWeekday(day.date);
+      row.appendChild(weekday);
+
+      var dayCondition = document.createElement("span");
+      dayCondition.className = "mmm-mirror-os__weather-day-condition";
+      dayCondition.textContent = this.formatWeatherCondition(day.condition);
+      row.appendChild(dayCondition);
+
+      var temps = document.createElement("span");
+      temps.className = "mmm-mirror-os__weather-range";
+      temps.textContent = this.formatWeatherNumber(day.highF) + "° / " + this.formatWeatherNumber(day.lowF) + "°";
+      row.appendChild(temps);
+
+      var precip = document.createElement("span");
+      precip.className = "mmm-mirror-os__weather-precip";
+      precip.textContent = this.formatWeatherNumber(day.precipChancePct) + "%";
+      row.appendChild(precip);
+
+      forecast.appendChild(row);
+    }, this);
+
+    container.appendChild(forecast);
+    return container;
+  },
+
+  formatWeatherCondition: function (condition) {
+    if (!condition || typeof condition !== "object") return "? Unknown";
+    return [condition.glyph, condition.label || "Unknown"].filter(Boolean).join(" ");
+  },
+
+  formatWeatherNumber: function (value) {
+    var number = Number(value);
+    if (!Number.isFinite(number)) return "—";
+    return String(Math.round(number));
+  },
+
+  formatWeatherWeekday: function (dateString) {
+    var parsed = Date.parse(dateString + "T00:00:00");
+    if (!Number.isFinite(parsed)) return dateString || "";
+    try {
+      return new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(new Date(parsed));
+    } catch (error) {
+      return dateString;
     }
   },
 

@@ -23,7 +23,7 @@ let config = {
     },
     {
       module: "MMM-AgentSurface",
-      position: "top_right",
+      position: "fullscreen_below",
       config: {
         title: "Agent Surface",
         maxThreads: 6,

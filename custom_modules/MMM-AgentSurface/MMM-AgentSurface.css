@@ -1,0 +1,145 @@
+.mmm-agent-surface {
+  color: #f4f7fb;
+  font-size: 18px;
+  line-height: 1.25;
+  min-width: 320px;
+}
+
+.mmm-agent-surface__header {
+  align-items: baseline;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+.mmm-agent-surface__title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mmm-agent-surface__status {
+  color: #9fb4cf;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.mmm-agent-surface__message {
+  border-left: 4px solid #7890ad;
+  border-radius: 8px;
+  color: #dbe7f5;
+  margin: 10px 0;
+  padding: 10px 12px;
+}
+
+.mmm-agent-surface__message--waiting {
+  background: rgba(120, 144, 173, 0.16);
+}
+
+.mmm-agent-surface__message--stale {
+  background: rgba(224, 172, 74, 0.18);
+  border-left-color: #e0ac4a;
+}
+
+.mmm-agent-surface__message--error {
+  background: rgba(224, 87, 87, 0.18);
+  border-left-color: #e05757;
+}
+
+.mmm-agent-surface__summary {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.mmm-agent-surface__metric {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+}
+
+.mmm-agent-surface__metric-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.mmm-agent-surface__metric-label,
+.mmm-agent-surface__meta,
+.mmm-agent-surface__details {
+  color: #9fb4cf;
+  font-size: 13px;
+}
+
+.mmm-agent-surface__meta {
+  grid-column: 1 / -1;
+  text-align: right;
+}
+
+.mmm-agent-surface__cards {
+  display: grid;
+  gap: 10px;
+}
+
+.mmm-agent-surface__card {
+  background: rgba(255, 255, 255, 0.08);
+  border-left: 4px solid #7890ad;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.mmm-agent-surface__card--running {
+  border-left-color: #54c6eb;
+}
+
+.mmm-agent-surface__card--blocked,
+.mmm-agent-surface__card--failed {
+  border-left-color: #e05757;
+}
+
+.mmm-agent-surface__card--done {
+  border-left-color: #65d18a;
+}
+
+.mmm-agent-surface__card--waiting,
+.mmm-agent-surface__card--idle {
+  border-left-color: #e0ac4a;
+}
+
+.mmm-agent-surface__card-header {
+  align-items: start;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.mmm-agent-surface__card-title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mmm-agent-surface__badge {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #dbe7f5;
+  flex: 0 0 auto;
+  font-size: 12px;
+  padding: 3px 8px;
+  text-transform: uppercase;
+}
+
+.mmm-agent-surface__blocker {
+  color: #ffd1d1;
+  margin-top: 8px;
+}
+
+.mmm-agent-surface__last-message {
+  color: #dbe7f5;
+  font-size: 15px;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}

@@ -1,13 +1,13 @@
 # Magic Mirror Agent Surface
 
-This repo is reset to a clean MagicMirror scaffold so the next customization can be built from the ground up.
+This repo keeps the editable MagicMirror config, local agent-snapshot tooling, and Vercel control plane for the mirror.
 
 ## Current state
 
 - Pinned MagicMirror runtime (`v2.34.0`) bootstrapped into `runtime/MagicMirror`
-- Minimal config in `mirror-config/config.js`
-- Empty custom stylesheet in `mirror-config/custom.css`
-- No checked-in custom modules
+- Mirror config includes built-in `clock` and the custom `MMM-AgentSurface` module
+- Agent surface display config lives in `mirror-config/config.js`
+- Scoped visual tweaks live in `mirror-config/custom.css`
 - Sync scripts keep editable source in this repo and copy it into the runtime
 
 ## Preview on Mac
@@ -47,24 +47,33 @@ or:
 ./scripts/run-server.sh
 ```
 
-## Vercel Docker
+## Agent snapshots and Vercel
 
-This repo includes a minimal Vercel Docker control plane:
-
-- `Dockerfile.vercel`
-- `vercel/status-server.mjs`
-
-Deploy preview:
+Local snapshot validation:
 
 ```bash
-vercel deploy
+npm run check:snapshot -- --file <snapshot.json>
 ```
 
-Deploy production:
+Collect real OMP usage stats and recent session metadata as a snapshot:
 
 ```bash
-vercel deploy --prod
+npm run collect:omp-stats
 ```
+
+Upload a snapshot to the local mirror and optional Vercel validator:
+
+```bash
+npm run upload:snapshot -- --file <snapshot.json> --cloud-url https://magicmirror-setup-configs.vercel.app
+```
+
+
+Snapshot uploads target the Vercel endpoint `POST /api/agent-snapshot`.
+
+Environment names:
+
+- `MIRROR_INGEST_TOKEN` — bearer token used by the upload client and Vercel ingest API
+- `MIRROR_CALENDAR_ICS_URL` — optional calendar feed URL; the calendar module is omitted until this is configured
 
 Health checks:
 
@@ -72,13 +81,11 @@ Health checks:
 - `GET /healthz`
 - `GET /status`
 
-The Pi still runs MagicMirror, sensors, voice, and local agent collection. Vercel hosts the HTTP control plane only.
-
 ## Files to customize next
 
 - `mirror-config/config.js` — active MagicMirror modules and positions
-- `mirror-config/custom.css` — global visual system
-- `custom_modules/` — future custom modules, created only when the implementation is real
+- `mirror-config/custom.css` — scoped visual tweaks
+- `custom_modules/MMM-AgentSurface/` — custom agent surface module path
 
 ## Ground-up direction
 

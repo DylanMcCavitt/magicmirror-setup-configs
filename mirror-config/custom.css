@@ -1,0 +1,15 @@
+.MMM-AgentSurface {
+  max-width: 34rem;
+}
+
+.MMM-AgentSurface .module-header {
+  margin-bottom: 0.5rem;
+}
+
+.MMM-AgentSurface .agent-thread {
+  margin-bottom: 0.75rem;
+}
+
+.MMM-AgentSurface .agent-thread:last-child {
+  margin-bottom: 0;
+}

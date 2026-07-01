@@ -25,6 +25,7 @@ Module.register("MMM-AgentSurface", {
       }
     }.bind(this), 60 * 1000);
     this.scheduleRotation();
+    this.reportPageState();
     this.sendSocketNotification("MMM_AGENT_SURFACE_GET_CURRENT");
   },
 
@@ -44,6 +45,7 @@ Module.register("MMM-AgentSurface", {
       }.bind(this), 60 * 1000);
     }
     this.scheduleRotation();
+    this.reportPageState();
     this.updateDom(0);
   },
 
@@ -68,6 +70,7 @@ Module.register("MMM-AgentSurface", {
     this.rotationTimer = setTimeout(function () {
       if (!this.shell) return;
       this.shell.next("rotation");
+      this.reportPageState();
       this.updateDom(300);
       this.scheduleRotation();
     }.bind(this), dwellMs);
@@ -96,6 +99,11 @@ Module.register("MMM-AgentSurface", {
       this.error = payload && payload.message ? String(payload.message) : "Snapshot unavailable";
       this.payloadStates.agentSnapshot = { state: "error", message: this.error };
       this.updateDom(300);
+      return;
+    }
+
+    if (notification === "MMM_AGENT_SURFACE_CONTROL") {
+      this.applyControlCommand(payload);
     }
   },
 
@@ -103,38 +111,58 @@ Module.register("MMM-AgentSurface", {
     if (!this.shell) return;
 
     if (notification === "MIRROR_OS_PAGE_NEXT") {
-      this.shell.next("command");
-      this.updateDom(0);
-      this.scheduleRotation();
+      this.applyControlCommand({ command: "next" });
       return;
     }
 
     if (notification === "MIRROR_OS_PAGE_PREV") {
-      this.shell.prev("command");
-      this.updateDom(0);
-      this.scheduleRotation();
+      this.applyControlCommand({ command: "previous" });
       return;
     }
 
     if (notification === "MIRROR_OS_PAGE_JUMP") {
-      this.shell.jump(payload && payload.pageId, "command");
-      this.updateDom(0);
-      this.scheduleRotation();
+      this.applyControlCommand({ command: "show", pageId: payload && payload.pageId });
       return;
     }
 
     if (notification === "MIRROR_OS_ROTATION_PAUSE") {
-      this.shell.pause("command");
-      this.updateDom(0);
-      this.scheduleRotation();
+      this.applyControlCommand({ command: "pause" });
       return;
     }
 
     if (notification === "MIRROR_OS_ROTATION_RESUME") {
-      this.shell.resume("command");
-      this.updateDom(0);
-      this.scheduleRotation();
+      this.applyControlCommand({ command: "resume" });
     }
+  },
+
+  applyControlCommand: function (payload) {
+    if (!this.shell) return;
+    var command = payload && payload.command;
+
+    if (command === "next") {
+      this.shell.next("command");
+    } else if (command === "previous") {
+      this.shell.prev("command");
+    } else if (command === "show") {
+      this.shell.jump(payload && payload.pageId, "command");
+    } else if (command === "pause") {
+      this.shell.pause("command");
+    } else if (command === "resume") {
+      this.shell.resume("command");
+    } else {
+      return;
+    }
+
+    this.reportPageState();
+    this.updateDom(0);
+    this.scheduleRotation();
+  },
+
+  reportPageState: function () {
+    if (!this.shell) return;
+    var state = this.shell.state();
+    state.pages = this.shell.rotationOrder();
+    this.sendSocketNotification("MMM_AGENT_SURFACE_PAGE_STATE", state);
   },
 
   refreshAgentSnapshotState: function () {

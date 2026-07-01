@@ -177,6 +177,9 @@ export function digestSnapshot(snapshot) {
 }
 
 export function readBearerToken(headers = {}) {
+  const directToken = headers["x-mirror-ingest-token"] || headers["X-Mirror-Ingest-Token"] || "";
+  if (directToken) return String(directToken);
+
   const header = headers.authorization || headers.Authorization || "";
   const match = /^Bearer\s+(.+)$/i.exec(header);
   return match ? match[1] : "";

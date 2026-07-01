@@ -54,6 +54,7 @@ Config and page-contract validation:
 ```bash
 npm run check:config
 npm run check:contracts
+npm run check:source-state
 ```
 
 Local snapshot validation:

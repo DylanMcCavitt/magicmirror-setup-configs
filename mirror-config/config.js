@@ -16,6 +16,19 @@ let config = {
     {
       module: "updatenotification",
       position: "top_bar"
+    },
+    {
+      module: "clock",
+      position: "top_left"
+    },
+    {
+      module: "MMM-AgentSurface",
+      position: "top_right",
+      config: {
+        title: "Agent Surface",
+        maxThreads: 6,
+        staleAfterSeconds: 300
+      }
     }
   ]
 };

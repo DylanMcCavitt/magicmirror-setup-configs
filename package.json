@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "check:config": "node scripts/check-config.mjs",
+    "check:snapshot": "node scripts/check-agent-snapshot.mjs",
+    "collect:omp-stats": "node scripts/collect-omp-stats.mjs",
+    "upload:snapshot": "node scripts/upload-agent-snapshot.mjs",
     "vercel:serve": "node vercel/status-server.mjs"
   },
   "engines": {

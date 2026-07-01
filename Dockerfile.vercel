@@ -4,6 +4,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY vercel/status-server.mjs ./vercel/status-server.mjs
+COPY lib/agent-snapshot.mjs ./lib/agent-snapshot.mjs
 
 EXPOSE 80
 CMD ["node", "vercel/status-server.mjs"]

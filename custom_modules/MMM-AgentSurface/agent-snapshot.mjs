@@ -78,6 +78,7 @@ export function validateAgentSnapshot(input) {
       if (!cleanString(thread.id)) errors.push(`threads[${index}].id is required`);
       if (!cleanString(thread.title)) errors.push(`threads[${index}].title is required`);
       if (!cleanString(thread.status)) errors.push(`threads[${index}].status is required`);
+      if (!cleanString(thread.project)) errors.push(`threads[${index}].project is required`);
       if (!isValidDate(thread.updatedAt)) errors.push(`threads[${index}].updatedAt must be an ISO timestamp`);
     });
   }
@@ -106,7 +107,7 @@ export function normalizeAgentSnapshot(input, options = {}) {
       updatedAt: new Date(thread.updatedAt).toISOString()
     };
 
-    const optionalStrings = ["agent", "repo", "branch", "phase", "blocker"];
+    const optionalStrings = ["agent", "project", "repo", "branch", "phase", "issueId", "prId", "workstreamId", "blocker"];
     optionalStrings.forEach((key) => {
       const value = cleanString(thread[key]);
       if (value) normalized[key] = value;

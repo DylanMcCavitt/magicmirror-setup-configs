@@ -67,6 +67,7 @@ function listRecentSessions(limit = 8) {
       sessions.push({
         id,
         title: cleanLabel(folder.name),
+        project: process.env.MIRROR_AGENT_PROJECT || "Magic Mirror Agent Surface",
         status: minutesOld <= 10 ? "running" : "idle",
         updatedAt: stat.mtime.toISOString(),
         phase: minutesOld <= 10 ? "recent activity" : "last seen",

@@ -122,13 +122,11 @@
   overflow-wrap: anywhere;
 }
 
-.mmm-agent-surface__badge {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 999px;
+.mmm-agent-surface__state {
   color: #dbe7f5;
   flex: 0 0 auto;
   font-size: 12px;
-  padding: 3px 8px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 

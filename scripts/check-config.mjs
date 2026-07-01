@@ -3,6 +3,7 @@ import path from "node:path";
 import process from "node:process";
 import vm from "node:vm";
 import { existsSync, readFileSync } from "node:fs";
+import { validateMirrorOsContract } from "../lib/mirror-os-contract.mjs";
 
 const repoRoot = path.resolve(new URL("..", import.meta.url).pathname);
 const configPath = path.join(repoRoot, "mirror-config/config.js");
@@ -36,9 +37,20 @@ for (const entry of config.modules) {
   }
 }
 
+const agentSurface = config.modules.find((entry) => entry?.module === "MMM-AgentSurface");
+if (!agentSurface?.config?.mirrorOs) {
+  missing.push("MMM-AgentSurface config.mirrorOs");
+} else {
+  const contract = validateMirrorOsContract(agentSurface.config.mirrorOs);
+  if (!contract.ok) {
+    console.error(`Mirror OS contract is invalid:\n${contract.errors.join("\n")}`);
+    process.exit(1);
+  }
+}
+
 if (missing.length) {
   console.error(`Configured custom modules are missing:\n${missing.join("\n")}`);
   process.exit(1);
 }
 
-console.log(JSON.stringify({ ok: true, moduleCount: config.modules.length }, null, 2));
+console.log(JSON.stringify({ ok: true, moduleCount: config.modules.length, mirrorOsContract: true }, null, 2));

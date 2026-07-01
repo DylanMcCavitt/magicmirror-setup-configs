@@ -47,7 +47,14 @@ or:
 ./scripts/run-server.sh
 ```
 
-## Agent snapshots and Vercel
+## Agent snapshots, Mirror OS contracts, and Vercel
+
+Config and page-contract validation:
+
+```bash
+npm run check:config
+npm run check:contracts
+```
 
 Local snapshot validation:
 
@@ -70,10 +77,15 @@ npm run upload:snapshot -- --file <snapshot.json> --cloud-url https://magicmirro
 
 Snapshot uploads target the Vercel endpoint `POST /api/agent-snapshot`.
 
-Environment names:
+Environment/source names:
 
 - `MIRROR_INGEST_TOKEN` — bearer token used by the upload client and Vercel ingest API
-- `MIRROR_CALENDAR_ICS_URL` — optional calendar feed URL; the calendar module is omitted until this is configured
+- `MIRROR_LOCAL_UPLOAD_TOKEN` — optional bearer token accepted by the local `MMM-AgentSurface` upload endpoint
+- `MIRROR_AGENT_PROJECT` — optional project label for collected agent work; defaults to `Magic Mirror Agent Surface`
+- `MIRROR_CALENDAR_ICS_URL` — calendar ICS feed URL; calendar stays `unconfigured` until this is set
+- `MIRROR_WEATHER_LATITUDE` and `MIRROR_WEATHER_LONGITUDE` — Open-Meteo coordinate source; weather stays `unconfigured` until both are set
+- `MIRROR_PATH_GTFS_RT_URL` and `MIRROR_PATH_STATION_ID` — PATH GTFS-realtime source; PATH stays `unconfigured` until both are set
+- `MIRROR_SPORTS_LEAGUES` and `MIRROR_SPORTS_TEAMS` — sports scoreboard source selectors; sports stays `unconfigured` until both are set
 
 Health checks:
 

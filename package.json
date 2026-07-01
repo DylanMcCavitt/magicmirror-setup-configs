@@ -11,6 +11,7 @@
     "check:shell": "node scripts/check-shell.mjs",
     "check:source-state": "node scripts/check-source-state.mjs",
     "check:provenance": "node scripts/check-provenance.mjs",
+    "check:control": "node scripts/check-control.mjs",
     "collect:omp-stats": "node scripts/collect-omp-stats.mjs",
     "upload:snapshot": "node scripts/upload-agent-snapshot.mjs",
     "vercel:serve": "node vercel/status-server.mjs"

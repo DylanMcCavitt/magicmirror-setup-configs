@@ -126,9 +126,10 @@ function scenarioValidPayloads() {
     dataSourceId,
     validPayload(dataSourceId, index)
   ]));
+  const now = Date.parse(payloads.sportsScoreboard.updatedAt) + 1000;
   const states = Object.fromEntries(dataSourceIds.map((dataSourceId) => [
     dataSourceId,
-    resolveDataSourceState(dataSourceId, { env: sentinelEnv, payload: payloads[dataSourceId] })
+    resolveDataSourceState(dataSourceId, { env: sentinelEnv, payload: payloads[dataSourceId], now })
   ]));
   for (const dataSourceId of dataSourceIds) {
     assert(states[dataSourceId].state === "ready", `${dataSourceId} should be ready with full metadata`);
@@ -190,7 +191,7 @@ function scenarioBrokenPayloads() {
     source: Object.assign(Object.create(null), { kind: "fixture", label: "Fixture" }),
     updatedAt: "2026-07-01T12:00:00.000Z"
   });
-  const nullProtoState = resolveDataSourceState("calendarIcs", { env: sentinelEnv, payload: nullPrototypePayload });
+  const nullProtoState = resolveDataSourceState("calendarIcs", { env: sentinelEnv, payload: nullPrototypePayload, now: Date.parse(nullPrototypePayload.updatedAt) + 1000 });
   assert(nullProtoState.state === "ready", "null-prototype plain object payload should still resolve ready");
 }
 

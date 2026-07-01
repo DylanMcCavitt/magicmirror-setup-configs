@@ -8,6 +8,7 @@
     "check:contracts": "node scripts/check-mirror-os-contract.mjs",
     "check:snapshot": "node scripts/check-agent-snapshot.mjs",
     "check:source-state": "node scripts/check-source-state.mjs",
+    "check:provenance": "node scripts/check-provenance.mjs",
     "collect:omp-stats": "node scripts/collect-omp-stats.mjs",
     "upload:snapshot": "node scripts/upload-agent-snapshot.mjs",
     "vercel:serve": "node vercel/status-server.mjs"

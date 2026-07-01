@@ -14,15 +14,15 @@ Module.register("MMM-AgentSurface", {
     this.summary = null;
     this.error = null;
     this.payloadStates = {};
+    this.sourceData = {};
     this.rotationTimer = null;
     this.shell = window.MMMAgentSurfaceMirrorOsShell
       ? window.MMMAgentSurfaceMirrorOsShell.createMirrorOsShell(this.config.mirrorOs || {})
       : null;
     this.staleTimer = setInterval(function () {
-      if (this.snapshot) {
-        this.refreshAgentSnapshotState();
-        this.updateDom(0);
-      }
+      this.refreshAgentSnapshotState();
+      this.refreshSourceStates();
+      this.updateDom(0);
     }.bind(this), 60 * 1000);
     this.scheduleRotation();
     this.reportPageState();
@@ -38,10 +38,9 @@ Module.register("MMM-AgentSurface", {
   resume: function () {
     if (!this.staleTimer) {
       this.staleTimer = setInterval(function () {
-        if (this.snapshot) {
-          this.refreshAgentSnapshotState();
-          this.updateDom(0);
-        }
+        this.refreshAgentSnapshotState();
+        this.refreshSourceStates();
+        this.updateDom(0);
       }.bind(this), 60 * 1000);
     }
     this.scheduleRotation();
@@ -98,6 +97,15 @@ Module.register("MMM-AgentSurface", {
     if (notification === "MMM_AGENT_SURFACE_ERROR") {
       this.error = payload && payload.message ? String(payload.message) : "Snapshot unavailable";
       this.payloadStates.agentSnapshot = { state: "error", message: this.error };
+      this.updateDom(300);
+      return;
+    }
+
+    if (notification === "MMM_AGENT_SURFACE_SOURCE_DATA") {
+      if (!payload || typeof payload.dataSourceId !== "string") return;
+      if (payload.dataSourceId === "agentSnapshot") return;
+      this.sourceData[payload.dataSourceId] = payload;
+      this.refreshSourceStates();
       this.updateDom(300);
       return;
     }
@@ -185,6 +193,47 @@ Module.register("MMM-AgentSurface", {
       provenance: provenance || null,
       message: null
     };
+  },
+
+  sourceStaleAfterSeconds: function (dataSourceId) {
+    var mirrorOs = this.config.mirrorOs || {};
+    var dataSources = mirrorOs.dataSources || {};
+    var entry = dataSources[dataSourceId] || {};
+    var value = Number(entry.staleAfterSeconds);
+    return Number.isFinite(value) && value > 0 ? value : 900;
+  },
+
+  refreshSourceStates: function () {
+    Object.keys(this.sourceData).forEach(function (dataSourceId) {
+      var result = this.sourceData[dataSourceId];
+
+      if (result.state === "unconfigured") {
+        delete this.payloadStates[dataSourceId];
+        return;
+      }
+
+      if (result.state === "error") {
+        this.payloadStates[dataSourceId] = { state: "error", message: result.message || "Source error." };
+        return;
+      }
+
+      if (result.state !== "ready") {
+        delete this.payloadStates[dataSourceId];
+        return;
+      }
+
+      var updatedAt = Date.parse(result.updatedAt);
+      var stale = Number.isFinite(updatedAt)
+        ? Date.now() - updatedAt > this.sourceStaleAfterSeconds(dataSourceId) * 1000
+        : true;
+      var provenance = [result.source, this.formatRelativeAge(result.updatedAt)].filter(Boolean).join(" · ");
+      this.payloadStates[dataSourceId] = {
+        state: stale ? "stale" : "ready",
+        stale: stale,
+        provenance: provenance || null,
+        message: stale ? "Data is stale. Last update " + (this.formatRelativeAge(result.updatedAt) || "unknown") + "." : null
+      };
+    }, this);
   },
 
   getDom: function () {
@@ -290,13 +339,162 @@ Module.register("MMM-AgentSurface", {
       return body;
     }
 
-    if (viewModel.state === "ready") {
+    if (viewModel.state === "ready" || viewModel.state === "stale") {
+      if (viewModel.state === "stale") {
+        body.appendChild(this.renderMessage("stale", viewModel.message || "Data is stale."));
+      }
+
+      if (viewModel.pageId === "calendar") {
+        body.appendChild(this.renderCalendarPage(viewModel));
+        return body;
+      }
+
       body.appendChild(this.renderEmptyRow("No renderer for this page yet"));
       return body;
     }
 
-    body.appendChild(this.renderMessage("stale", viewModel.message || "Data is stale."));
+    body.appendChild(this.renderMessage("error", "Unknown page state."));
     return body;
+  },
+
+  renderCalendarPage: function (viewModel) {
+    var container = document.createElement("div");
+    container.className = "mmm-mirror-os__calendar";
+
+    var result = this.sourceData[viewModel.dataSourceId] || {};
+    var data = result.data || {};
+    var events = Array.isArray(data.events) ? data.events : [];
+
+    if (events.length === 0) {
+      container.appendChild(this.renderEmptyRow("No upcoming events in the configured feed."));
+      return container;
+    }
+
+    var next = events[0];
+    var nextPanel = document.createElement("div");
+    nextPanel.className = "mmm-mirror-os__calendar-next";
+
+    var nextWhen = document.createElement("div");
+    nextWhen.className = "mmm-mirror-os__calendar-next-when";
+    nextWhen.textContent = this.formatEventTime(next, data.timezone);
+    nextPanel.appendChild(nextWhen);
+
+    var nextTitle = document.createElement("div");
+    nextTitle.className = "mmm-mirror-os__calendar-next-title";
+    nextTitle.textContent = next.title;
+    nextPanel.appendChild(nextTitle);
+
+    if (next.location) {
+      var nextWhere = document.createElement("div");
+      nextWhere.className = "mmm-mirror-os__calendar-next-where";
+      nextWhere.textContent = next.location;
+      nextPanel.appendChild(nextWhere);
+    }
+    container.appendChild(nextPanel);
+
+    var agenda = document.createElement("div");
+    agenda.className = "mmm-mirror-os__calendar-agenda";
+    events.slice(1, 7).forEach(function (event) {
+      var row = document.createElement("div");
+      row.className = "mmm-mirror-os__calendar-row";
+
+      var when = document.createElement("span");
+      when.className = "mmm-mirror-os__calendar-when";
+      when.textContent = this.formatEventTime(event, data.timezone);
+      row.appendChild(when);
+
+      var title = document.createElement("span");
+      title.className = "mmm-mirror-os__calendar-title";
+      title.textContent = event.title;
+      row.appendChild(title);
+
+      agenda.appendChild(row);
+    }, this);
+    container.appendChild(agenda);
+
+    container.appendChild(this.renderMonthGrid(events, data.timezone));
+    return container;
+  },
+
+  renderMonthGrid: function (events, timezone) {
+    var grid = document.createElement("div");
+    grid.className = "mmm-mirror-os__calendar-month";
+
+    var eventDays = {};
+    events.forEach(function (event) {
+      var key = this.eventDayKey(event.startsAt, timezone);
+      if (key) eventDays[key] = true;
+    }, this);
+
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = now.getMonth();
+    var firstDay = new Date(year, month, 1);
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var todayKey = this.dayKey(now);
+
+    ["S", "M", "T", "W", "T", "F", "S"].forEach(function (weekday) {
+      var cell = document.createElement("span");
+      cell.className = "mmm-mirror-os__calendar-cell mmm-mirror-os__calendar-cell--head";
+      cell.textContent = weekday;
+      grid.appendChild(cell);
+    });
+
+    for (var pad = 0; pad < firstDay.getDay(); pad += 1) {
+      var empty = document.createElement("span");
+      empty.className = "mmm-mirror-os__calendar-cell mmm-mirror-os__calendar-cell--pad";
+      grid.appendChild(empty);
+    }
+
+    for (var day = 1; day <= daysInMonth; day += 1) {
+      var date = new Date(year, month, day);
+      var key = this.dayKey(date);
+      var cell = document.createElement("span");
+      cell.className = "mmm-mirror-os__calendar-cell" +
+        (key === todayKey ? " mmm-mirror-os__calendar-cell--today" : "") +
+        (eventDays[key] ? " mmm-mirror-os__calendar-cell--event" : "");
+      cell.textContent = String(day);
+      grid.appendChild(cell);
+    }
+
+    return grid;
+  },
+
+  dayKey: function (date) {
+    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+  },
+
+  eventDayKey: function (isoString, timezone) {
+    var parsed = Date.parse(isoString);
+    if (!Number.isFinite(parsed)) return null;
+    var date = new Date(parsed);
+    if (timezone) {
+      try {
+        var parts = new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+        return parts;
+      } catch (error) {
+        // fall through to local time below
+      }
+    }
+    return this.dayKey(date);
+  },
+
+  formatEventTime: function (event, timezone) {
+    var parsed = Date.parse(event.startsAt);
+    if (!Number.isFinite(parsed)) return "";
+    var date = new Date(parsed);
+    var options = { weekday: "short", month: "short", day: "numeric" };
+    if (!event.allDay) {
+      options.hour = "numeric";
+      options.minute = "2-digit";
+    }
+    if (timezone) options.timeZone = timezone;
+    try {
+      return new Intl.DateTimeFormat(undefined, options).format(date);
+    } catch (error) {
+      delete options.timeZone;
+      return new Intl.DateTimeFormat(undefined, options).format(date);
+    }
   },
 
   renderHomeSummary: function (viewModel) {

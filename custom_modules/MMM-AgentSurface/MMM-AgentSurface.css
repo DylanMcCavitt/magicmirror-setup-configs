@@ -586,3 +586,75 @@
 .mmm-mirror-os__path-row--soon .mmm-mirror-os__path-unit {
   color: #e0ac4a;
 }
+
+.mmm-agent-surface__project-heading {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  color: #9aa3ad;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  padding: 8px 0 4px;
+  text-transform: uppercase;
+}
+
+.mmm-agent-surface__card-project {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+}
+
+.mmm-agent-surface__card-title {
+  color: #f7f7f2;
+  font-size: 17px;
+}
+
+.mmm-agent-surface__identifiers {
+  color: #9aa3ad;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.mmm-agent-surface__last-message {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.mmm-agent-surface__thread-meta {
+  align-items: center;
+  color: #9aa3ad;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 10px;
+  letter-spacing: 0.08em;
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+
+.mmm-agent-surface__card--running .mmm-agent-surface__thread-status {
+  color: #54c6eb;
+}
+
+.mmm-agent-surface__card--blocked .mmm-agent-surface__thread-status,
+.mmm-agent-surface__card--failed .mmm-agent-surface__thread-status {
+  color: #e05757;
+}
+
+.mmm-agent-surface__card--done .mmm-agent-surface__thread-status {
+  color: #65d18a;
+}
+
+.mmm-agent-surface__card--waiting .mmm-agent-surface__thread-status,
+.mmm-agent-surface__card--idle .mmm-agent-surface__thread-status,
+.mmm-agent-surface__card--stale .mmm-agent-surface__thread-status {
+  color: #e0ac4a;
+}
+
+.mmm-agent-surface__updated-age {
+  color: #9aa3ad;
+}

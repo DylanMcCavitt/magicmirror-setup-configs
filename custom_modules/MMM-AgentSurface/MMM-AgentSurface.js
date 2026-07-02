@@ -53,7 +53,7 @@ Module.register("MMM-AgentSurface", {
   },
 
   getScripts: function () {
-    return [this.file("display-sanitizer.js"), this.file("mirror-os-shell.js")];
+    return [this.file("display-sanitizer.js"), this.file("mirror-os-shell.js"), this.file("agents-view.js")];
   },
 
   clearRotationTimer: function () {
@@ -808,14 +808,33 @@ Module.register("MMM-AgentSurface", {
   renderAgentThreads: function () {
     if (!this.snapshot) return this.renderUnconfigured(this.shell.pageViewModel("agents", { payloadStates: {}, now: Date.now() }));
 
-    var threads = Array.isArray(this.snapshot.threads) ? this.snapshot.threads : [];
-    if (threads.length === 0) return this.renderMessage("waiting", "No active agent threads in the latest snapshot.");
+    var agentsView = window.MMMAgentSurfaceAgentsView;
+    if (!agentsView || typeof agentsView.deriveAgentsView !== "function") {
+      return this.renderMessage("error", "Agents view helper unavailable.");
+    }
+
+    var view = agentsView.deriveAgentsView(this.snapshot, { maxThreads: this.config.maxThreads });
+    var groups = view && Array.isArray(view.groups) ? view.groups : [];
+    if (groups.length === 0) return this.renderMessage("waiting", "No active agent threads in the latest snapshot.");
 
     var list = document.createElement("div");
     list.className = "mmm-mirror-os__cards mmm-agent-surface__cards";
 
-    threads.slice(0, this.config.maxThreads).forEach(function (thread) {
-      list.appendChild(this.renderThreadCard(thread));
+    groups.forEach(function (group) {
+      var threads = group && Array.isArray(group.threads) ? group.threads : [];
+      if (threads.length === 0) return;
+
+      var grouped = threads.length > 1 && group.project;
+      if (grouped) {
+        var heading = document.createElement("div");
+        heading.className = "mmm-agent-surface__project-heading";
+        heading.textContent = group.project;
+        list.appendChild(heading);
+      }
+
+      threads.forEach(function (thread) {
+        list.appendChild(this.renderThreadCard(thread, { project: group.project, showProject: !grouped }));
+      }, this);
     }, this);
 
     return list;
@@ -871,46 +890,51 @@ Module.register("MMM-AgentSurface", {
     parent.appendChild(metric);
   },
 
-  renderThreadCard: function (thread) {
+  renderThreadCard: function (thread, options) {
+    thread = thread || {};
+    options = options || {};
+
+    var status = this.safeClassPart(thread.status);
     var card = document.createElement("article");
-    card.className = "mmm-agent-surface__card mmm-agent-surface__card--" + this.safeClassPart(thread.status);
+    card.className = "mmm-agent-surface__card mmm-agent-surface__card--" + status;
 
-    var row = document.createElement("div");
-    row.className = "mmm-agent-surface__card-header";
+    var showProject = options.showProject !== false;
+    var primary = document.createElement("div");
+    primary.className = showProject ? "mmm-agent-surface__card-project" : "mmm-agent-surface__card-title";
+    primary.textContent = showProject && options.project ? options.project : (thread.title || "");
+    card.appendChild(primary);
 
-    var title = document.createElement("div");
-    title.className = "mmm-agent-surface__card-title";
-    title.textContent = thread.title || thread.id || "Untitled thread";
-    row.appendChild(title);
-
-    var state = document.createElement("div");
-    state.className = "mmm-agent-surface__state";
-    state.textContent = this.statusGlyph(thread.status) + " " + (thread.status || "unknown");
-    row.appendChild(state);
-    card.appendChild(row);
-
-    var details = [thread.project, thread.issueId, thread.prId, thread.workstreamId, thread.agent, thread.repo, thread.phase, this.formatTime(thread.updatedAt)].filter(Boolean);
-    if (details.length) {
-      var detail = document.createElement("div");
-      detail.className = "mmm-agent-surface__details";
-      detail.textContent = details.join(" • ");
-      card.appendChild(detail);
+    if (thread.identifiers) {
+      var identifiers = document.createElement("div");
+      identifiers.className = "mmm-agent-surface__identifiers";
+      identifiers.textContent = thread.identifiers;
+      card.appendChild(identifiers);
     }
 
-    if (thread.blocker) {
-      var blocker = document.createElement("div");
-      blocker.className = "mmm-agent-surface__blocker";
-      blocker.textContent = thread.blocker;
-      card.appendChild(blocker);
+    if (thread.brief) {
+      var brief = document.createElement("div");
+      brief.className = "mmm-agent-surface__last-message";
+      brief.textContent = thread.brief;
+      card.appendChild(brief);
     }
 
-    if (thread.lastMessage) {
-      var message = document.createElement("div");
-      message.className = "mmm-agent-surface__last-message";
-      message.textContent = thread.lastMessage;
-      card.appendChild(message);
+    var meta = document.createElement("div");
+    meta.className = "mmm-agent-surface__thread-meta";
+
+    var state = document.createElement("span");
+    state.className = "mmm-agent-surface__state mmm-agent-surface__thread-status";
+    state.textContent = this.statusGlyph(thread.status) + " " + String(thread.status || "unknown").toUpperCase();
+    meta.appendChild(state);
+
+    var age = this.formatRelativeAge(thread.updatedAt);
+    if (age) {
+      var updated = document.createElement("span");
+      updated.className = "mmm-agent-surface__updated-age";
+      updated.textContent = age;
+      meta.appendChild(updated);
     }
 
+    card.appendChild(meta);
     return card;
   },
 

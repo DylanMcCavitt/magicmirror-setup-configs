@@ -18,10 +18,6 @@ let config = {
       position: "top_bar"
     },
     {
-      module: "clock",
-      position: "top_left"
-    },
-    {
       module: "MMM-AgentSurface",
       position: "fullscreen_below",
       config: {

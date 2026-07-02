@@ -16,6 +16,10 @@ Module.register("MMM-AgentSurface", {
     this.payloadStates = {};
     this.sourceData = {};
     this.rotationTimer = null;
+    this.chromeClockTimer = null;
+    this.chromeClockTime = null;
+    this.chromeClockDate = null;
+    this.homeClockTime = null;
     this.shell = window.MMMAgentSurfaceMirrorOsShell
       ? window.MMMAgentSurfaceMirrorOsShell.createMirrorOsShell(this.config.mirrorOs || {})
       : null;
@@ -33,6 +37,7 @@ Module.register("MMM-AgentSurface", {
     clearInterval(this.staleTimer);
     this.staleTimer = null;
     this.clearRotationTimer();
+    this.clearChromeClockTimer();
   },
 
   resume: function () {
@@ -45,6 +50,7 @@ Module.register("MMM-AgentSurface", {
     }
     this.scheduleRotation();
     this.reportPageState();
+    this.restartChromeClock();
     this.updateDom(0);
   },
 
@@ -246,69 +252,140 @@ Module.register("MMM-AgentSurface", {
     }
 
     this.refreshAgentSnapshotState();
+    this.refreshSourceStates();
     var viewModel = this.shell.pageViewModel(this.shell.currentPage(), { payloadStates: this.payloadStates, now: Date.now() });
     if (!viewModel) viewModel = this.shell.pageViewModel("home", { payloadStates: this.payloadStates, now: Date.now() });
+    this.homeClockTime = null;
 
-    wrapper.appendChild(this.renderShellHeader(viewModel));
-    wrapper.appendChild(this.renderPageBody(viewModel));
+    wrapper.appendChild(this.renderChromeBar(viewModel));
+
+    var page = document.createElement("div");
+    page.className = "mmm-mirror-os__page mmm-mirror-os__page--" + this.safeClassPart(viewModel.pageId);
+    page.appendChild(this.renderShellHeader(viewModel));
+    page.appendChild(this.renderPageBody(viewModel));
+    wrapper.appendChild(page);
+
+    this.restartChromeClock();
     return wrapper;
+  },
+
+  renderChromeBar: function (viewModel) {
+    var chrome = document.createElement("div");
+    chrome.className = "mmm-mirror-os__chrome";
+
+    var wordmark = document.createElement("div");
+    wordmark.className = "mmm-mirror-os__chrome-id";
+    wordmark.appendChild(document.createTextNode("MIRROR OS"));
+    var surfaceLabel = this.config.header || ((this.config.mirrorOs || {}).home || {}).label || this.config.title;
+    if (surfaceLabel) {
+      wordmark.appendChild(document.createTextNode(" / "));
+      var strong = document.createElement("span");
+      strong.className = "mmm-mirror-os__chrome-accent";
+      strong.textContent = String(surfaceLabel).toUpperCase();
+      wordmark.appendChild(strong);
+    }
+    chrome.appendChild(wordmark);
+
+    var tabs = document.createElement("div");
+    tabs.className = "mmm-mirror-os__page-tabs";
+    this.shell.rotationOrder().forEach(function (pageId) {
+      var tab = document.createElement("span");
+      tab.className = "mmm-mirror-os__page-tab" + (pageId === viewModel.pageId ? " mmm-mirror-os__page-tab--active" : "");
+      tab.textContent = this.pageLabel(pageId).toUpperCase();
+      tabs.appendChild(tab);
+    }, this);
+    if (this.shell.state().rotationPaused) {
+      var paused = document.createElement("span");
+      paused.className = "mmm-mirror-os__page-paused";
+      paused.textContent = "⏸";
+      tabs.appendChild(paused);
+    }
+    chrome.appendChild(tabs);
+
+    var clock = document.createElement("div");
+    clock.className = "mmm-mirror-os__chrome-clock";
+    var time = document.createElement("div");
+    time.className = "mmm-mirror-os__chrome-time";
+    var date = document.createElement("div");
+    date.className = "mmm-mirror-os__chrome-date";
+    clock.appendChild(time);
+    clock.appendChild(date);
+    chrome.appendChild(clock);
+
+    this.chromeClockTime = time;
+    this.chromeClockDate = date;
+    this.updateChromeClockText();
+
+    return chrome;
+  },
+
+  clearChromeClockTimer: function () {
+    clearInterval(this.chromeClockTimer);
+    this.chromeClockTimer = null;
+  },
+
+  restartChromeClock: function () {
+    this.clearChromeClockTimer();
+    this.updateChromeClockText();
+    this.chromeClockTimer = setInterval(function () {
+      this.updateChromeClockText();
+    }.bind(this), 15000);
+  },
+
+  updateChromeClockText: function () {
+    var now = new Date();
+    var time = this.formatClockTime(now);
+    if (this.chromeClockTime) this.chromeClockTime.textContent = time;
+    if (this.chromeClockDate) this.chromeClockDate.textContent = this.formatChromeDate(now);
+    if (this.homeClockTime) this.homeClockTime.textContent = time;
+  },
+
+  formatClockTime: function (date) {
+    return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+  },
+
+  formatChromeDate: function (date) {
+    var weekdays = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    var months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    return weekdays[date.getDay()] + " · " + months[date.getMonth()] + " " + date.getDate();
   },
 
   renderShellHeader: function (viewModel) {
     var header = document.createElement("div");
-    header.className = "mmm-mirror-os__header";
+    header.className = "mmm-mirror-os__header ph";
 
-    var titleBlock = document.createElement("div");
-    titleBlock.className = "mmm-mirror-os__title-block";
+    var main = document.createElement("div");
+    main.className = "mmm-mirror-os__header-main";
+
+    var eyebrow = document.createElement("div");
+    eyebrow.className = "mmm-mirror-os__eyebrow ph-eyebrow";
+    eyebrow.textContent = this.pageEyebrow(viewModel);
+    main.appendChild(eyebrow);
 
     var title = document.createElement("div");
-    title.className = "mmm-mirror-os__title mmm-agent-surface__title";
-    title.textContent = this.config.title;
-    titleBlock.appendChild(title);
+    title.className = "mmm-mirror-os__title ph-title mmm-agent-surface__title";
+    title.textContent = this.pageTitle(viewModel);
+    main.appendChild(title);
 
-    var page = document.createElement("div");
-    page.className = "mmm-mirror-os__page-label";
-    page.textContent = viewModel.label;
-    titleBlock.appendChild(page);
-    header.appendChild(titleBlock);
+    var sub = document.createElement("div");
+    sub.className = "mmm-mirror-os__provenance ph-sub mmm-mirror-os__provenance--" + this.safeClassPart(viewModel.state);
+    sub.textContent = this.formatProvenanceLine(viewModel);
+    main.appendChild(sub);
+    header.appendChild(main);
 
-    var statusBlock = document.createElement("div");
-    statusBlock.className = "mmm-mirror-os__status-block";
-
-    var status = document.createElement("div");
-    status.className = "mmm-mirror-os__status mmm-mirror-os__status--" + this.safeClassPart(viewModel.state) + " mmm-agent-surface__status";
-    status.textContent = viewModel.glyph + " " + viewModel.state;
-    statusBlock.appendChild(status);
-
-    statusBlock.appendChild(this.renderPageIndicator(viewModel.pageId));
-    header.appendChild(statusBlock);
-
-    if (viewModel.provenance) {
-      header.appendChild(this.renderProvenance(viewModel));
+    var metaLines = this.pageMetaLines(viewModel);
+    if (metaLines.length) {
+      var meta = document.createElement("div");
+      meta.className = "mmm-mirror-os__header-meta ph-meta";
+      metaLines.forEach(function (line) {
+        var item = document.createElement("div");
+        item.textContent = line;
+        meta.appendChild(item);
+      });
+      header.appendChild(meta);
     }
 
     return header;
-  },
-
-  renderPageIndicator: function (currentPageId) {
-    var indicator = document.createElement("div");
-    indicator.className = "mmm-mirror-os__indicator";
-
-    this.shell.rotationOrder().forEach(function (pageId) {
-      var dot = document.createElement("span");
-      dot.className = "mmm-mirror-os__indicator-dot" + (pageId === currentPageId ? " mmm-mirror-os__indicator-dot--current" : "");
-      dot.textContent = pageId === currentPageId ? "●" : "·";
-      indicator.appendChild(dot);
-    });
-
-    return indicator;
-  },
-
-  renderProvenance: function (viewModel) {
-    var node = document.createElement("div");
-    node.className = "mmm-mirror-os__provenance mmm-mirror-os__provenance--" + this.safeClassPart(viewModel.state);
-    node.textContent = viewModel.state === "stale" ? viewModel.glyph + " stale · " + viewModel.provenance : viewModel.provenance;
-    return node;
   },
 
   renderPageBody: function (viewModel) {
@@ -326,24 +403,21 @@ Module.register("MMM-AgentSurface", {
     }
 
     if (viewModel.state === "error") {
-      body.appendChild(this.renderMessage("error", viewModel.message || "Source error."));
+      body.appendChild(this.renderStatusPanel(viewModel, viewModel.message || "Source error."));
+      return body;
+    }
+
+    if (viewModel.state === "stale") {
+      body.appendChild(this.renderStatusPanel(viewModel, this.staleStatusMessage(viewModel)));
       return body;
     }
 
     if (viewModel.pageId === "agents") {
-      if (this.isSnapshotStale()) {
-        body.appendChild(this.renderMessage("stale", "Snapshot is stale. Waiting for an updated upload."));
-      }
-      if (this.config.showSummary && this.snapshot) body.appendChild(this.renderSummary());
       body.appendChild(this.renderAgentThreads());
       return body;
     }
 
-    if (viewModel.state === "ready" || viewModel.state === "stale") {
-      if (viewModel.state === "stale") {
-        body.appendChild(this.renderMessage("stale", viewModel.message || "Data is stale."));
-      }
-
+    if (viewModel.state === "ready") {
       if (viewModel.pageId === "calendar") {
         body.appendChild(this.renderCalendarPage(viewModel));
         return body;
@@ -368,72 +442,108 @@ Module.register("MMM-AgentSurface", {
       return body;
     }
 
-    body.appendChild(this.renderMessage("error", "Unknown page state."));
+    body.appendChild(this.renderStatusPanel(viewModel, "Unknown page state."));
     return body;
   },
 
   renderCalendarPage: function (viewModel) {
     var container = document.createElement("div");
-    container.className = "mmm-mirror-os__calendar";
+    container.className = "mmm-mirror-os__calendar cal-layout";
 
     var result = this.sourceData[viewModel.dataSourceId] || {};
     var data = result.data || {};
     var events = Array.isArray(data.events) ? data.events : [];
+    var displayDate = new Date();
+
+    var main = document.createElement("div");
+    main.className = "cal-main";
+
+    var dateNum = document.createElement("div");
+    dateNum.className = "cal-date-num";
+    dateNum.textContent = String(displayDate.getDate());
+    main.appendChild(dateNum);
+
+    var dateLabel = document.createElement("div");
+    dateLabel.className = "cal-date-label";
+    dateLabel.textContent = this.formatCalendarDateLabel(displayDate);
+    main.appendChild(dateLabel);
 
     if (events.length === 0) {
-      container.appendChild(this.renderEmptyRow("No upcoming events in the configured feed."));
-      return container;
+      main.appendChild(this.renderEmptyRow("No upcoming events in the configured feed."));
+    } else {
+      events.slice(0, 7).forEach(function (event) {
+        var row = document.createElement("div");
+        row.className = "cal-event" + (this.isEventCurrent(event) ? " now" : "");
+
+        var when = document.createElement("div");
+        when.className = "cal-time";
+        var dayLabel = this.formatEventDayShort(event, data.timezone);
+        if (dayLabel) {
+          var dayNode = document.createElement("div");
+          dayNode.className = "cal-time-day";
+          dayNode.textContent = dayLabel;
+          when.appendChild(dayNode);
+        }
+        var clockNode = document.createElement("div");
+        clockNode.className = "cal-time-clock";
+        clockNode.textContent = this.formatEventTimeShort(event, data.timezone);
+        when.appendChild(clockNode);
+        row.appendChild(when);
+
+        var details = document.createElement("div");
+        var title = document.createElement("div");
+        title.className = "cal-title";
+        title.textContent = event.title || "Untitled event";
+        details.appendChild(title);
+
+        var where = this.eventLocationLabel(event, result.source);
+        if (where) {
+          var whereNode = document.createElement("div");
+          whereNode.className = "cal-where";
+          whereNode.textContent = where;
+          details.appendChild(whereNode);
+        }
+
+        row.appendChild(details);
+        main.appendChild(row);
+      }, this);
     }
+    container.appendChild(main);
 
+    var sidebar = document.createElement("div");
+    sidebar.className = "cal-sidebar";
     var next = events[0];
-    var nextPanel = document.createElement("div");
-    nextPanel.className = "mmm-mirror-os__calendar-next";
-
-    var nextWhen = document.createElement("div");
-    nextWhen.className = "mmm-mirror-os__calendar-next-when";
-    nextWhen.textContent = this.formatEventTime(next, data.timezone);
-    nextPanel.appendChild(nextWhen);
+    var nextLabel = document.createElement("div");
+    nextLabel.className = "cal-next-lbl";
+    nextLabel.textContent = "// NEXT EVENT";
+    sidebar.appendChild(nextLabel);
 
     var nextTitle = document.createElement("div");
-    nextTitle.className = "mmm-mirror-os__calendar-next-title";
-    nextTitle.textContent = next.title;
-    nextPanel.appendChild(nextTitle);
+    nextTitle.className = "cal-next-title";
+    nextTitle.textContent = next ? (next.title || "Untitled event") : "No upcoming events";
+    sidebar.appendChild(nextTitle);
 
-    if (next.location) {
-      var nextWhere = document.createElement("div");
-      nextWhere.className = "mmm-mirror-os__calendar-next-where";
-      nextWhere.textContent = next.location;
-      nextPanel.appendChild(nextWhere);
-    }
-    container.appendChild(nextPanel);
+    var nextTime = document.createElement("div");
+    nextTime.className = "cal-next-time";
+    nextTime.textContent = next ? this.formatEventTime(next, data.timezone) : "—";
+    sidebar.appendChild(nextTime);
+    sidebar.appendChild(this.renderMonthGrid(events, data.timezone));
+    container.appendChild(sidebar);
 
-    var agenda = document.createElement("div");
-    agenda.className = "mmm-mirror-os__calendar-agenda";
-    events.slice(1, 7).forEach(function (event) {
-      var row = document.createElement("div");
-      row.className = "mmm-mirror-os__calendar-row";
-
-      var when = document.createElement("span");
-      when.className = "mmm-mirror-os__calendar-when";
-      when.textContent = this.formatEventTime(event, data.timezone);
-      row.appendChild(when);
-
-      var title = document.createElement("span");
-      title.className = "mmm-mirror-os__calendar-title";
-      title.textContent = event.title;
-      row.appendChild(title);
-
-      agenda.appendChild(row);
-    }, this);
-    container.appendChild(agenda);
-
-    container.appendChild(this.renderMonthGrid(events, data.timezone));
     return container;
   },
 
   renderMonthGrid: function (events, timezone) {
+    var wrap = document.createElement("div");
+    wrap.className = "mini-cal";
+
+    var label = document.createElement("div");
+    label.className = "mini-cal-head";
+    label.textContent = "// MONTH";
+    wrap.appendChild(label);
+
     var grid = document.createElement("div");
-    grid.className = "mmm-mirror-os__calendar-month";
+    grid.className = "mini-cal-grid";
 
     var eventDays = {};
     events.forEach(function (event) {
@@ -449,15 +559,16 @@ Module.register("MMM-AgentSurface", {
     var todayKey = this.dayKey(now);
 
     ["S", "M", "T", "W", "T", "F", "S"].forEach(function (weekday) {
-      var cell = document.createElement("span");
-      cell.className = "mmm-mirror-os__calendar-cell mmm-mirror-os__calendar-cell--head";
-      cell.textContent = weekday;
-      grid.appendChild(cell);
+      var head = document.createElement("span");
+      head.className = "mcd";
+      head.textContent = weekday;
+      grid.appendChild(head);
     });
 
     for (var pad = 0; pad < firstDay.getDay(); pad += 1) {
       var empty = document.createElement("span");
-      empty.className = "mmm-mirror-os__calendar-cell mmm-mirror-os__calendar-cell--pad";
+      empty.className = "mcn other";
+      empty.textContent = "";
       grid.appendChild(empty);
     }
 
@@ -465,14 +576,15 @@ Module.register("MMM-AgentSurface", {
       var date = new Date(year, month, day);
       var key = this.dayKey(date);
       var cell = document.createElement("span");
-      cell.className = "mmm-mirror-os__calendar-cell" +
-        (key === todayKey ? " mmm-mirror-os__calendar-cell--today" : "") +
-        (eventDays[key] ? " mmm-mirror-os__calendar-cell--event" : "");
+      cell.className = "mcn" +
+        (key === todayKey ? " today" : "") +
+        (eventDays[key] ? " has-ev" : "");
       cell.textContent = String(day);
       grid.appendChild(cell);
     }
 
-    return grid;
+    wrap.appendChild(grid);
+    return wrap;
   },
 
   dayKey: function (date) {
@@ -514,7 +626,7 @@ Module.register("MMM-AgentSurface", {
 
   renderWeatherPage: function (viewModel) {
     var container = document.createElement("div");
-    container.className = "mmm-mirror-os__weather";
+    container.className = "mmm-mirror-os__weather wx-layout";
 
     var result = this.sourceData[viewModel.dataSourceId] || {};
     var data = result.data || {};
@@ -527,65 +639,71 @@ Module.register("MMM-AgentSurface", {
     }
 
     var currentPanel = document.createElement("div");
-    currentPanel.className = "mmm-mirror-os__weather-current";
+    currentPanel.className = "wx-top";
 
+    var left = document.createElement("div");
     var temp = document.createElement("div");
-    temp.className = "mmm-mirror-os__weather-temp";
-    temp.textContent = this.formatWeatherNumber(current.temperatureF) + "°";
-    currentPanel.appendChild(temp);
-
-    var details = document.createElement("div");
-    details.className = "mmm-mirror-os__weather-details";
+    temp.className = "wx-temp";
+    var tempNumber = document.createElement("span");
+    tempNumber.textContent = this.formatWeatherNumber(current.temperatureF);
+    temp.appendChild(tempNumber);
+    var tempUnit = document.createElement("sup");
+    tempUnit.textContent = "°F";
+    temp.appendChild(tempUnit);
+    left.appendChild(temp);
 
     var condition = document.createElement("div");
-    condition.className = "mmm-mirror-os__weather-condition";
+    condition.className = "wx-cond";
     condition.textContent = this.formatWeatherCondition(current.condition);
-    details.appendChild(condition);
+    left.appendChild(condition);
 
     var metaParts = [];
-    if (current.apparentF !== null && current.apparentF !== undefined) metaParts.push("Feels " + this.formatWeatherNumber(current.apparentF) + "°");
-    if (current.windMph !== null && current.windMph !== undefined) metaParts.push("Wind " + this.formatWeatherNumber(current.windMph) + " mph");
-    if (current.humidityPct !== null && current.humidityPct !== undefined) metaParts.push("Humidity " + this.formatWeatherNumber(current.humidityPct) + "%");
-
+    if (current.apparentF !== null && current.apparentF !== undefined) metaParts.push("FEELS " + this.formatWeatherNumber(current.apparentF) + "°");
+    if (current.windMph !== null && current.windMph !== undefined) metaParts.push("WIND " + this.formatWeatherNumber(current.windMph) + " MPH");
+    if (current.humidityPct !== null && current.humidityPct !== undefined) metaParts.push("HUMIDITY " + this.formatWeatherNumber(current.humidityPct) + "%");
     if (metaParts.length) {
-      var meta = document.createElement("div");
-      meta.className = "mmm-mirror-os__weather-meta";
-      meta.textContent = metaParts.join(" · ");
-      details.appendChild(meta);
+      var details = document.createElement("div");
+      details.className = "wx-details";
+      details.textContent = metaParts.join(" / ");
+      left.appendChild(details);
     }
+    currentPanel.appendChild(left);
 
-    currentPanel.appendChild(details);
+    var glyph = document.createElement("div");
+    glyph.className = "wx-glyph";
+    glyph.textContent = current.condition && current.condition.glyph ? current.condition.glyph : "?";
+    currentPanel.appendChild(glyph);
     container.appendChild(currentPanel);
 
     if (daily.length === 0) return container;
 
     var forecast = document.createElement("div");
-    forecast.className = "mmm-mirror-os__weather-forecast";
+    forecast.className = "wx-forecast";
     daily.slice(0, 5).forEach(function (day) {
-      var row = document.createElement("div");
-      row.className = "mmm-mirror-os__weather-day";
+      var cell = document.createElement("div");
+      cell.className = "wx-day";
 
-      var weekday = document.createElement("span");
-      weekday.className = "mmm-mirror-os__weather-weekday";
+      var weekday = document.createElement("div");
+      weekday.className = "wx-day-name";
       weekday.textContent = this.formatWeatherWeekday(day.date);
-      row.appendChild(weekday);
+      cell.appendChild(weekday);
 
-      var dayCondition = document.createElement("span");
-      dayCondition.className = "mmm-mirror-os__weather-day-condition";
+      var high = document.createElement("div");
+      high.className = "wx-day-hi";
+      high.textContent = this.formatWeatherNumber(day.highF) + "°";
+      cell.appendChild(high);
+
+      var low = document.createElement("div");
+      low.className = "wx-day-lo";
+      low.textContent = this.formatWeatherNumber(day.lowF) + "°";
+      cell.appendChild(low);
+
+      var dayCondition = document.createElement("div");
+      dayCondition.className = "wx-day-cond";
       dayCondition.textContent = this.formatWeatherCondition(day.condition);
-      row.appendChild(dayCondition);
+      cell.appendChild(dayCondition);
 
-      var temps = document.createElement("span");
-      temps.className = "mmm-mirror-os__weather-range";
-      temps.textContent = this.formatWeatherNumber(day.highF) + "° / " + this.formatWeatherNumber(day.lowF) + "°";
-      row.appendChild(temps);
-
-      var precip = document.createElement("span");
-      precip.className = "mmm-mirror-os__weather-precip";
-      precip.textContent = this.formatWeatherNumber(day.precipChancePct) + "%";
-      row.appendChild(precip);
-
-      forecast.appendChild(row);
+      forecast.appendChild(cell);
     }, this);
 
     container.appendChild(forecast);
@@ -615,7 +733,7 @@ Module.register("MMM-AgentSurface", {
 
   renderSportsPage: function (viewModel) {
     var container = document.createElement("div");
-    container.className = "mmm-mirror-os__sports";
+    container.className = "mmm-mirror-os__sports sports-layout";
 
     var result = this.sourceData[viewModel.dataSourceId] || {};
     var data = result.data || {};
@@ -624,10 +742,20 @@ Module.register("MMM-AgentSurface", {
 
     if (warnings.length > 0) {
       var warning = document.createElement("div");
-      warning.className = "mmm-mirror-os__sports-warning";
+      warning.className = "mmm-mirror-os__sports-warning mgrid-bar";
       warning.textContent = "Unavailable: " + warnings.join(", ").toUpperCase();
       container.appendChild(warning);
     }
+
+    var head = document.createElement("div");
+    head.className = "sports-head-row";
+    ["MATCH", "SCORE", "STATE", "TIME"].forEach(function (label) {
+      var cell = document.createElement("div");
+      cell.className = "sc-hd";
+      cell.textContent = label;
+      head.appendChild(cell);
+    });
+    container.appendChild(head);
 
     if (games.length === 0) {
       container.appendChild(this.renderEmptyRow("No configured-team games on the current ESPN scoreboard."));
@@ -644,103 +772,134 @@ Module.register("MMM-AgentSurface", {
   renderSportsGameRow: function (game) {
     var away = game.awayTeam || {};
     var home = game.homeTeam || {};
+    var statusPart = this.safeClassPart(game.status);
     var row = document.createElement("div");
-    row.className = "mmm-mirror-os__sports-row mmm-mirror-os__sports-row--" + this.safeClassPart(game.status);
+    row.className = "mmm-mirror-os__sports-row sports-game " + statusPart;
 
+    var awayScore = Number(away.score);
+    var homeScore = Number(home.score);
+    var hasScores = Number.isFinite(awayScore) && Number.isFinite(homeScore) && statusPart !== "upcoming";
+    var awayLeads = hasScores && awayScore > homeScore;
+    var homeLeads = hasScores && homeScore > awayScore;
+
+    var match = document.createElement("div");
+    match.className = "s-match";
     var league = document.createElement("div");
-    league.className = "mmm-mirror-os__sports-league";
+    league.className = "s-league-tag";
     league.textContent = String(game.league || "").toUpperCase();
-    row.appendChild(league);
-
-    var matchup = document.createElement("div");
-    matchup.className = "mmm-mirror-os__sports-matchup";
-
-    var matchupLine = document.createElement("div");
-    matchupLine.className = "mmm-mirror-os__sports-matchup-line";
-
-    var awayAbbr = document.createElement("strong");
-    awayAbbr.textContent = away.abbr || away.name || "--";
-    matchupLine.appendChild(awayAbbr);
-
-    var separator = document.createElement("span");
-    separator.className = "mmm-mirror-os__sports-separator";
-    separator.textContent = " @ ";
-    matchupLine.appendChild(separator);
-
-    var homeAbbr = document.createElement("strong");
-    homeAbbr.textContent = home.abbr || home.name || "--";
-    matchupLine.appendChild(homeAbbr);
-    matchup.appendChild(matchupLine);
-
-    var names = document.createElement("div");
-    names.className = "mmm-mirror-os__sports-names";
-    names.textContent = [away.name, home.name].filter(Boolean).join(" at ");
-    matchup.appendChild(names);
-    row.appendChild(matchup);
+    match.appendChild(league);
+    this.appendSportsTeam(match, away.abbr || away.name || "--", awayLeads);
+    this.appendSportsTeam(match, home.abbr || home.name || "--", homeLeads);
+    row.appendChild(match);
 
     var score = document.createElement("div");
-    score.className = "mmm-mirror-os__sports-score";
-    score.textContent = String(away.score || "0") + "–" + String(home.score || "0");
+    score.className = "s-score";
+    var awayScoreNode = document.createElement("span");
+    awayScoreNode.className = awayLeads ? "lead" : (hasScores ? "" : "dim");
+    awayScoreNode.textContent = hasScores ? String(away.score || "0") : "—";
+    score.appendChild(awayScoreNode);
+    var homeScoreNode = document.createElement("span");
+    homeScoreNode.className = homeLeads ? "lead" : (hasScores ? "" : "dim");
+    homeScoreNode.textContent = hasScores ? String(home.score || "0") : "—";
+    score.appendChild(homeScoreNode);
     row.appendChild(score);
 
-    var status = document.createElement("div");
-    status.className = "mmm-mirror-os__sports-status";
-    status.textContent = game.statusDetail || game.status || "";
-    row.appendChild(status);
+    var state = document.createElement("div");
+    state.className = "s-game-st";
+    if (statusPart === "live") {
+      var live = document.createElement("div");
+      live.className = "s-live-tag";
+      live.textContent = "LIVE";
+      state.appendChild(live);
+    }
+    var detail = document.createElement("span");
+    detail.className = "s-small";
+    detail.textContent = game.statusDetail || game.status || "";
+    state.appendChild(detail);
+    row.appendChild(state);
+
+    var time = document.createElement("div");
+    time.className = "s-period";
+    time.textContent = this.formatSportsTime(game.startsAt);
+    row.appendChild(time);
 
     return row;
   },
 
   renderPathPage: function (viewModel) {
     var container = document.createElement("div");
-    container.className = "mmm-mirror-os__path";
+    container.className = "mmm-mirror-os__path path-layout";
 
     var result = this.sourceData[viewModel.dataSourceId] || {};
     var data = result.data || {};
     var departures = Array.isArray(data.departures) ? data.departures : [];
+
+    var service = document.createElement("div");
+    service.className = "mgrid-bar path-svc";
+    var serviceLabel = document.createElement("span");
+    serviceLabel.textContent = "// DEPARTURES";
+    service.appendChild(serviceLabel);
+    var asOf = document.createElement("span");
+    asOf.textContent = "AS OF " + (this.formatRelativeAge(result.updatedAt) || "UNKNOWN");
+    service.appendChild(asOf);
+    container.appendChild(service);
 
     if (departures.length === 0) {
       container.appendChild(this.renderEmptyRow("No upcoming PATH departures for the configured station."));
       return container;
     }
 
-    var board = document.createElement("div");
-    board.className = "mmm-mirror-os__path-board";
+    this.groupPathDepartures(departures).forEach(function (group) {
+      container.appendChild(this.renderPathRouteRow(group));
+    }, this);
 
-    departures.forEach(function (departure) {
-      var row = document.createElement("div");
-      row.className = "mmm-mirror-os__path-row" + (departure.minutes <= 2 ? " mmm-mirror-os__path-row--soon" : "");
-
-      var details = document.createElement("div");
-      details.className = "mmm-mirror-os__path-details";
-
-      var route = document.createElement("div");
-      route.className = "mmm-mirror-os__path-route";
-      route.textContent = departure.routeLabel || departure.routeId || "PATH";
-      details.appendChild(route);
-
-      var destination = document.createElement("div");
-      destination.className = "mmm-mirror-os__path-destination";
-      destination.textContent = departure.destination || departure.headsign || "Next departure";
-      details.appendChild(destination);
-
-      row.appendChild(details);
-
-      var minutes = document.createElement("div");
-      minutes.className = "mmm-mirror-os__path-minutes";
-      minutes.textContent = String(departure.minutes);
-      row.appendChild(minutes);
-
-      var unit = document.createElement("div");
-      unit.className = "mmm-mirror-os__path-unit";
-      unit.textContent = "min";
-      row.appendChild(unit);
-
-      board.appendChild(row);
-    });
-
-    container.appendChild(board);
     return container;
+  },
+
+  renderPathRouteRow: function (group) {
+    var row = document.createElement("div");
+    row.className = "path-route" + (group.soon ? " path-route--soon" : "");
+
+    var nameCell = document.createElement("div");
+    nameCell.className = "path-route-name-cell";
+    var route = document.createElement("div");
+    route.className = "path-rname";
+    route.textContent = group.routeLabel;
+    nameCell.appendChild(route);
+    var direction = document.createElement("div");
+    direction.className = "path-rdir";
+    direction.textContent = group.destination;
+    nameCell.appendChild(direction);
+    row.appendChild(nameCell);
+
+    var trains = document.createElement("div");
+    trains.className = "path-trains-cell";
+    group.departures.forEach(function (departure, index) {
+      if (index > 0) {
+        var sep = document.createElement("span");
+        sep.className = "path-sep";
+        sep.textContent = "/";
+        trains.appendChild(sep);
+      }
+      var train = document.createElement("span");
+      train.className = "path-train";
+      train.textContent = String(departure.minutes);
+      var unit = document.createElement("span");
+      unit.textContent = "MIN";
+      train.appendChild(unit);
+      trains.appendChild(train);
+    });
+    row.appendChild(trains);
+
+    var status = document.createElement("div");
+    status.className = "path-status-cell";
+    var statusText = document.createElement("span");
+    statusText.className = "path-status " + (group.soon ? "path-status--soon" : "path-status--ok");
+    statusText.textContent = group.soon ? "△ DUE" : "· LIVE";
+    status.appendChild(statusText);
+    row.appendChild(status);
+
+    return row;
   },
   renderHomeSummary: function (viewModel) {
     if (!window.MMMAgentSurfaceHomeView || typeof window.MMMAgentSurfaceHomeView.deriveHomeView !== "function") {
@@ -755,52 +914,79 @@ Module.register("MMM-AgentSurface", {
       if (sourceView) sourceStates.push(sourceView);
     }, this);
 
-    return this.renderHomePage(window.MMMAgentSurfaceHomeView.deriveHomeView({
+    var homeView = window.MMMAgentSurfaceHomeView.deriveHomeView({
       now: new Date(),
       homeConfig: this.config.mirrorOs && this.config.mirrorOs.home,
       rotationOrder: rotationOrder,
       currentPageId: viewModel.pageId,
       dwellSeconds: this.shell.dwellSeconds(viewModel.pageId),
       sourceStates: sourceStates
-    }));
+    });
+
+    homeView.currentPageId = viewModel.pageId;
+    homeView.rotationRows = rotationOrder.map(function (pageId) {
+      return {
+        id: pageId,
+        label: this.pageLabel(pageId),
+        dwellSeconds: this.shell.dwellSeconds(pageId)
+      };
+    }, this);
+
+    return this.renderHomePage(homeView);
   },
 
   renderHomePage: function (homeView) {
     var panel = document.createElement("div");
-    panel.className = "mmm-mirror-os__home";
+    panel.className = "mmm-mirror-os__home home-layout";
 
-    var top = document.createElement("div");
-    top.className = "mmm-mirror-os__home-top";
+    var clockCell = document.createElement("div");
+    clockCell.className = "home-clock-cell";
+
+    var time = document.createElement("div");
+    time.className = "home-time";
+    clockCell.appendChild(time);
+    this.homeClockTime = time;
 
     var dateLine = document.createElement("div");
-    dateLine.className = "mmm-mirror-os__home-date";
+    dateLine.className = "home-dateline";
     dateLine.textContent = homeView.dateLine;
-    top.appendChild(dateLine);
-
-    if (homeView.label) {
-      var label = document.createElement("div");
-      label.className = "mmm-mirror-os__home-label";
-      label.textContent = homeView.label;
-      top.appendChild(label);
-    }
+    clockCell.appendChild(dateLine);
 
     var next = document.createElement("div");
-    next.className = "mmm-mirror-os__home-next";
-    next.textContent = "Next: " + homeView.nextPage.label + " · " + homeView.nextPage.dwellSeconds + "s dwell";
-    top.appendChild(next);
+    next.className = "home-next";
+    next.textContent = "NEXT: " + homeView.nextPage.label + " · " + homeView.nextPage.dwellSeconds + "S DWELL";
+    clockCell.appendChild(next);
+    panel.appendChild(clockCell);
 
-    panel.appendChild(top);
+    var sidebar = document.createElement("div");
+    sidebar.className = "home-sidebar";
 
-    var readiness = document.createElement("div");
-    readiness.className = "mmm-mirror-os__home-readiness";
+    var rotation = document.createElement("div");
+    rotation.className = "home-panel";
+    var rotationTitle = document.createElement("div");
+    rotationTitle.className = "hp-title";
+    rotationTitle.textContent = "// PAGE ROTATION";
+    rotation.appendChild(rotationTitle);
+    (homeView.rotationRows || []).forEach(function (page) {
+      var row = document.createElement("div");
+      row.className = "rot-row" + (page.id === homeView.currentPageId ? " now" : "");
+      var label = document.createElement("span");
+      label.textContent = page.label;
+      row.appendChild(label);
+      var state = document.createElement("span");
+      state.className = page.id === homeView.currentPageId ? "rot-now-tag" : "rot-wait";
+      state.textContent = page.id === homeView.currentPageId ? "→ NOW" : page.dwellSeconds + "S";
+      row.appendChild(state);
+      rotation.appendChild(row);
+    });
+    sidebar.appendChild(rotation);
 
-    var summary = document.createElement("div");
-    summary.className = "mmm-mirror-os__home-readiness-summary";
-    summary.textContent = homeView.readiness.readyCount + " of " + homeView.readiness.totalCount + " sources ready";
-    readiness.appendChild(summary);
-
-    var list = document.createElement("div");
-    list.className = "mmm-mirror-os__source-list mmm-mirror-os__home-source-list";
+    var sources = document.createElement("div");
+    sources.className = "home-panel";
+    var sourcesTitle = document.createElement("div");
+    sourcesTitle.className = "hp-title";
+    sourcesTitle.textContent = "// SOURCES";
+    sources.appendChild(sourcesTitle);
     homeView.readiness.rows.forEach(function (source) {
       var row = document.createElement("div");
       row.className = "mmm-mirror-os__source-row mmm-mirror-os__home-source-row mmm-mirror-os__source-row--" + this.safeClassPart(source.state);
@@ -815,36 +1001,38 @@ Module.register("MMM-AgentSurface", {
       state.textContent = source.glyph + " " + source.state;
       row.appendChild(state);
 
-      list.appendChild(row);
+      sources.appendChild(row);
     }, this);
+    sidebar.appendChild(sources);
 
-    readiness.appendChild(list);
-    panel.appendChild(readiness);
+    var control = document.createElement("div");
+    control.className = "home-panel";
+    var controlTitle = document.createElement("div");
+    controlTitle.className = "hp-title";
+    controlTitle.textContent = "// CONTROL";
+    control.appendChild(controlTitle);
+    var phone = document.createElement("div");
+    phone.className = "ctrl-hint";
+    phone.textContent = "phone  page controls";
+    control.appendChild(phone);
+    var voice = document.createElement("div");
+    voice.className = "ctrl-hint";
+    voice.textContent = "voice  not wired";
+    control.appendChild(voice);
+    sidebar.appendChild(control);
+
+    panel.appendChild(sidebar);
+    this.updateChromeClockText();
     return panel;
   },
 
   renderUnconfigured: function (viewModel) {
-    var node = document.createElement("div");
-    node.className = "mmm-mirror-os__empty mmm-agent-surface__message mmm-agent-surface__message--waiting";
-
-    var message = document.createElement("div");
-    message.className = "mmm-mirror-os__empty-message";
-    message.textContent = viewModel.message || viewModel.unconfiguredCopy || "Not configured.";
-    node.appendChild(message);
-
-    if (viewModel.missingConfigKeys && viewModel.missingConfigKeys.length) {
-      var setup = document.createElement("div");
-      setup.className = "mmm-mirror-os__setup";
-      setup.textContent = "Setup: " + viewModel.missingConfigKeys.join(", ");
-      node.appendChild(setup);
-    }
-
-    return node;
+    return this.renderStatusPanel(viewModel, viewModel.message || viewModel.unconfiguredCopy || "Not configured.");
   },
 
   renderEmptyRow: function (message) {
     var row = document.createElement("div");
-    row.className = "mmm-mirror-os__source-row mmm-mirror-os__source-row--empty";
+    row.className = "mmm-mirror-os__empty-row";
     row.textContent = message;
     return row;
   },
@@ -862,22 +1050,21 @@ Module.register("MMM-AgentSurface", {
     if (groups.length === 0) return this.renderMessage("waiting", "No active agent threads in the latest snapshot.");
 
     var list = document.createElement("div");
-    list.className = "mmm-mirror-os__cards mmm-agent-surface__cards";
+    list.className = "mmm-mirror-os__cards mmm-agent-surface__cards ag-grid";
 
     groups.forEach(function (group) {
       var threads = group && Array.isArray(group.threads) ? group.threads : [];
       if (threads.length === 0) return;
 
-      var grouped = threads.length > 1 && group.project;
-      if (grouped) {
+      if (group.project) {
         var heading = document.createElement("div");
-        heading.className = "mmm-agent-surface__project-heading";
+        heading.className = "mmm-agent-surface__project-heading ag-divider";
         heading.textContent = group.project;
         list.appendChild(heading);
       }
 
       threads.forEach(function (thread) {
-        list.appendChild(this.renderThreadCard(thread, { project: group.project, showProject: !grouped }));
+        list.appendChild(this.renderThreadCard(thread, { project: group.project }));
       }, this);
     }, this);
 
@@ -892,10 +1079,8 @@ Module.register("MMM-AgentSurface", {
   },
 
   renderMessage: function (kind, message) {
-    var node = document.createElement("div");
-    node.className = "mmm-agent-surface__message mmm-agent-surface__message--" + kind;
-    node.textContent = message;
-    return node;
+    var viewModel = { state: kind || "unknown", glyph: kind === "error" ? "!" : kind === "stale" ? "△" : kind === "waiting" ? "…" : "·", missingConfigKeys: [] };
+    return this.renderStatusPanel(viewModel, message);
   },
 
   renderSummary: function () {
@@ -940,46 +1125,262 @@ Module.register("MMM-AgentSurface", {
 
     var status = this.safeClassPart(thread.status);
     var card = document.createElement("article");
-    card.className = "mmm-agent-surface__card mmm-agent-surface__card--" + status;
+    card.className = "mmm-agent-surface__card mmm-agent-surface__card--" + status + " ag-item ag-item--" + status;
 
-    var showProject = options.showProject !== false;
-    var primary = document.createElement("div");
-    primary.className = showProject ? "mmm-agent-surface__card-project" : "mmm-agent-surface__card-title";
-    primary.textContent = showProject && options.project ? options.project : (thread.title || "");
-    card.appendChild(primary);
+    var title = document.createElement("div");
+    title.className = "mmm-agent-surface__card-title ag-project";
+    title.textContent = thread.title || options.project || "";
+    card.appendChild(title);
 
     if (thread.identifiers) {
       var identifiers = document.createElement("div");
-      identifiers.className = "mmm-agent-surface__identifiers";
+      identifiers.className = "mmm-agent-surface__identifiers ag-ref";
       identifiers.textContent = thread.identifiers;
       card.appendChild(identifiers);
     }
 
     if (thread.brief) {
       var brief = document.createElement("div");
-      brief.className = "mmm-agent-surface__last-message";
+      brief.className = "mmm-agent-surface__last-message ag-brief";
       brief.textContent = thread.brief;
       card.appendChild(brief);
     }
 
-    var meta = document.createElement("div");
-    meta.className = "mmm-agent-surface__thread-meta";
-
-    var state = document.createElement("span");
-    state.className = "mmm-agent-surface__state mmm-agent-surface__thread-status";
-    state.textContent = this.statusGlyph(thread.status) + " " + String(thread.status || "unknown").toUpperCase();
-    meta.appendChild(state);
+    var foot = document.createElement("div");
+    foot.className = "mmm-agent-surface__thread-meta ag-foot";
 
     var age = this.formatRelativeAge(thread.updatedAt);
-    if (age) {
-      var updated = document.createElement("span");
-      updated.className = "mmm-agent-surface__updated-age";
-      updated.textContent = age;
-      meta.appendChild(updated);
+    var updated = document.createElement("span");
+    updated.className = "mmm-agent-surface__updated-age ag-updated";
+    updated.textContent = age || "updated unknown";
+    foot.appendChild(updated);
+
+    var state = document.createElement("span");
+    state.className = "mmm-agent-surface__state mmm-agent-surface__thread-status ag-status";
+    state.textContent = this.statusGlyph(thread.status) + " " + String(thread.status || "unknown").toUpperCase();
+    foot.appendChild(state);
+
+    card.appendChild(foot);
+    return card;
+  },
+
+  renderStatusPanel: function (viewModel, message) {
+    viewModel = viewModel || {};
+    var panel = document.createElement("div");
+    panel.className = "mmm-mirror-os__status-panel mmm-mirror-os__status-panel--" + this.safeClassPart(viewModel.state);
+
+    var bar = document.createElement("div");
+    bar.className = "mgrid-bar";
+    bar.textContent = "// STATUS";
+    panel.appendChild(bar);
+
+    var cell = document.createElement("div");
+    cell.className = "mmm-mirror-os__status-cell";
+    var copy = document.createElement("div");
+    copy.className = "mmm-mirror-os__status-copy mmm-mirror-os__status-copy--" + this.safeClassPart(viewModel.state);
+    copy.textContent = (viewModel.glyph ? viewModel.glyph + " " : "") + (message || "Status unavailable.");
+    cell.appendChild(copy);
+
+    if (viewModel.missingConfigKeys && viewModel.missingConfigKeys.length) {
+      var setup = document.createElement("div");
+      setup.className = "mmm-mirror-os__setup";
+      setup.textContent = "SETUP: " + viewModel.missingConfigKeys.join(", ");
+      cell.appendChild(setup);
     }
 
-    card.appendChild(meta);
-    return card;
+    panel.appendChild(cell);
+    return panel;
+  },
+
+  pageLabel: function (pageId) {
+    var labels = { home: "Home", agents: "Agents", calendar: "Calendar", weather: "Weather", path: "PATH", sports: "Sports" };
+    return labels[pageId] || pageId || "";
+  },
+
+  pageEyebrow: function (viewModel) {
+    var contexts = {
+      home: "HOME / AMBIENT",
+      agents: "AGENT SURFACE / COMMAND CENTER",
+      calendar: "CALENDAR / DAY VIEW",
+      weather: "WEATHER / CURRENT CONDITIONS",
+      path: "PATH / DEPARTURE BOARD",
+      sports: "SPORTS / SCOREBOARD"
+    };
+    return contexts[viewModel.pageId] || String(viewModel.label || viewModel.pageId || "").toUpperCase();
+  },
+
+  pageTitle: function (viewModel) {
+    if (viewModel.pageId === "home") return "Overview";
+    if (viewModel.pageId === "agents") return "Active Work";
+    if (viewModel.pageId === "calendar") return "Today";
+    if (viewModel.pageId === "weather") {
+      var weatherResult = this.sourceData[viewModel.dataSourceId] || {};
+      var weatherData = weatherResult.data || {};
+      return weatherData.locationLabel || "Weather";
+    }
+    if (viewModel.pageId === "path") return "Next Trains";
+    if (viewModel.pageId === "sports") return "Scores";
+    return viewModel.label || "";
+  },
+
+  formatProvenanceLine: function (viewModel) {
+    var state = String(viewModel.state || "unknown").toUpperCase();
+    var parts = [viewModel.glyph ? viewModel.glyph + " " + state : state];
+    if (viewModel.provenance) parts.push(viewModel.provenance);
+    else if (viewModel.message) parts.push(viewModel.message);
+    return parts.join(" · ");
+  },
+
+  pageMetaLines: function (viewModel) {
+    var now = new Date();
+    if (viewModel.pageId === "home") return [];
+    if (viewModel.pageId === "agents") {
+      var source = this.snapshot && this.snapshot.source ? this.snapshot.source : {};
+      return [source.label || "Agent Snapshot", this.snapshot && this.snapshot.generatedAt ? this.formatDateTimeStamp(this.snapshot.generatedAt) : this.formatDateTimeStamp(now)];
+    }
+    if (viewModel.pageId === "calendar") {
+      return [this.formatMonthWeek(now), this.formatWeekday(now)];
+    }
+    if (viewModel.pageId === "weather") {
+      var weatherResult = this.sourceData[viewModel.dataSourceId] || {};
+      var weatherData = weatherResult.data || {};
+      var current = weatherData.current || {};
+      var feels = current.apparentF !== null && current.apparentF !== undefined ? "FEELS " + this.formatWeatherNumber(current.apparentF) + "°" : this.formatWeekday(now);
+      return [feels, this.formatShortMonthDate(now) + " · " + this.formatClockTime(now)];
+    }
+    if (viewModel.pageId === "path") {
+      var pathResult = this.sourceData[viewModel.dataSourceId] || {};
+      return [this.formatClockTime(now), "AS OF " + (this.formatRelativeAge(pathResult.updatedAt) || "UNKNOWN")];
+    }
+    if (viewModel.pageId === "sports") {
+      return [this.formatWeekday(now), this.formatShortMonthDate(now) + " · " + this.formatClockTime(now)];
+    }
+    return [];
+  },
+
+  staleStatusMessage: function (viewModel) {
+    if (viewModel.pageId === "agents" && this.isSnapshotStale()) return "Snapshot is stale. Waiting for an updated upload.";
+    return viewModel.message || "Data is stale.";
+  },
+
+  formatDateTimeStamp: function (value) {
+    var date = value instanceof Date ? value : new Date(value);
+    if (!Number.isFinite(date.getTime())) return "";
+    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " · " + this.formatClockTime(date);
+  },
+
+  formatWeekday: function (date) {
+    try {
+      return new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(date);
+    } catch (error) {
+      return "";
+    }
+  },
+
+  formatShortMonthDate: function (date) {
+    try {
+      return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(date);
+    } catch (error) {
+      return "";
+    }
+  },
+
+  formatMonthWeek: function (date) {
+    try {
+      var month = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(date);
+      return month.toUpperCase() + " · WEEK " + this.weekNumber(date);
+    } catch (error) {
+      return "WEEK " + this.weekNumber(date);
+    }
+  },
+
+  weekNumber: function (date) {
+    var start = new Date(date.getFullYear(), 0, 1);
+    var diff = Math.floor((date - start) / 86400000);
+    return Math.ceil((diff + start.getDay() + 1) / 7);
+  },
+
+  formatCalendarDateLabel: function (date) {
+    var weekdays = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+    var months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+    return weekdays[date.getDay()] + " · " + months[date.getMonth()] + " " + date.getFullYear();
+  },
+
+  formatEventTimeShort: function (event, timezone) {
+    if (event.allDay) return "ALL DAY";
+    var parsed = Date.parse(event.startsAt);
+    if (!Number.isFinite(parsed)) return "";
+    var options = { hour: "numeric", minute: "2-digit" };
+    if (timezone) options.timeZone = timezone;
+    try {
+      return new Intl.DateTimeFormat(undefined, options).format(new Date(parsed));
+    } catch (error) {
+      delete options.timeZone;
+      return new Intl.DateTimeFormat(undefined, options).format(new Date(parsed));
+    }
+  },
+
+  formatEventDayShort: function (event, timezone) {
+    var parsed = Date.parse(event.startsAt);
+    if (!Number.isFinite(parsed)) return "";
+    var options = { weekday: "short", month: "short", day: "numeric" };
+    if (timezone) options.timeZone = timezone;
+    var formatter;
+    try {
+      formatter = new Intl.DateTimeFormat(undefined, options);
+    } catch (error) {
+      delete options.timeZone;
+      formatter = new Intl.DateTimeFormat(undefined, options);
+    }
+    var eventDay = formatter.format(new Date(parsed));
+    if (eventDay === formatter.format(new Date())) return "";
+    return eventDay.toUpperCase();
+  },
+
+  eventLocationLabel: function (event, source) {
+    return event.location || source || "";
+  },
+
+  isEventCurrent: function (event) {
+    var start = Date.parse(event.startsAt);
+    var end = Date.parse(event.endsAt);
+    var now = Date.now();
+    return Number.isFinite(start) && Number.isFinite(end) && start <= now && now <= end;
+  },
+
+  groupPathDepartures: function (departures) {
+    var groups = [];
+    var byKey = {};
+    departures.forEach(function (departure) {
+      var routeLabel = departure.routeLabel || departure.routeId || "PATH";
+      var destination = departure.destination || departure.headsign || "Next departure";
+      var key = routeLabel + "\u0000" + destination;
+      if (!byKey[key]) {
+        byKey[key] = { routeLabel: routeLabel, destination: destination, departures: [], soon: false };
+        groups.push(byKey[key]);
+      }
+      byKey[key].departures.push(departure);
+      if (Number(departure.minutes) <= 2) byKey[key].soon = true;
+    });
+    return groups;
+  },
+
+  appendSportsTeam: function (parent, name, lead) {
+    var team = document.createElement("div");
+    team.className = "s-team" + (lead ? " lead" : "");
+    team.textContent = name;
+    parent.appendChild(team);
+  },
+
+  formatSportsTime: function (value) {
+    if (!value) return "—";
+    var date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return "—";
+    try {
+      return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+    } catch (error) {
+      return this.formatTime(value);
+    }
   },
 
   statusGlyph: function (status) {

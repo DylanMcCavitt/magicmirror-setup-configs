@@ -85,12 +85,14 @@ npm run upload:snapshot -- --file <snapshot.json> --cloud-url https://magicmirro
 
 Snapshot uploads target the Vercel endpoint `POST /api/agent-snapshot`.
 
+All HTTP endpoints (local module routes, cloud control plane, snapshot schema v1, auth model, exact request/response shapes and error codes) are documented in [docs/api.md](docs/api.md).
+
 Environment/source names:
 
 - `MIRROR_INGEST_TOKEN` — bearer token used by the upload client and Vercel ingest API
 - `MIRROR_LOCAL_UPLOAD_TOKEN` — optional bearer token accepted by the local `MMM-AgentSurface` upload endpoint
 - `MIRROR_AGENT_PROJECT` — optional project label for collected agent work; defaults to `Magic Mirror Agent Surface`
-- `MIRROR_CONTROL_TOKEN` — bearer token required by the local page-control API (`POST /MMM-AgentSurface/api/control`, `GET /MMM-AgentSurface/api/control/state`); `show` commands are validated against the page set the display module actually configured and fail closed (503) until the module has reported its page registry. A phone-friendly remote lives at `GET /MMM-AgentSurface/remote`: a static shell with no data or token material baked in — you enter the control token on the phone and every state read and command goes through the same bearer-checked control API, so missing/invalid auth stays fail-closed. It is reachable only where the MagicMirror HTTP server itself is reachable (LAN by default); do not port-forward it publicly.
+- `MIRROR_CONTROL_TOKEN` — bearer token required by the local page-control API and the phone remote at `GET /MMM-AgentSurface/remote` (a static shell with no data or token material baked in; the token is entered on the phone). Fails closed without it; endpoint details in [docs/api.md](docs/api.md). LAN-only by default — do not port-forward the mirror publicly.
 - `mirrorOs.home.label` — optional household display label configured in `mirror-config/config.js`; display-only text for the Home page, not a secret or data source
 - `MIRROR_CALENDAR_ICS_URL` — calendar ICS feed URL (Apple/Google shared or private ICS links work); calendar stays `unconfigured` until this is set. Optional: `MIRROR_CALENDAR_NAME` (display label), `MIRROR_CALENDAR_TIMEZONE` (IANA zone for event times). Feed URLs are never echoed in errors or on screen.
 - `MIRROR_WEATHER_LATITUDE` and `MIRROR_WEATHER_LONGITUDE` — Open-Meteo coordinate source; weather stays `unconfigured` until both are set. Optional: `MIRROR_WEATHER_TIMEZONE` (IANA zone or Open-Meteo timezone value), `MIRROR_WEATHER_LOCATION_LABEL` (display/source label).

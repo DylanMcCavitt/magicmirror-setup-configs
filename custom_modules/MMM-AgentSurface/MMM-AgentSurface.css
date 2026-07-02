@@ -162,6 +162,20 @@
   letter-spacing: -0.02em;
 }
 
+.mmm-mirror-os__chrome-time-row {
+  align-items: baseline;
+  display: flex;
+  gap: 5px;
+}
+
+.mmm-mirror-os__chrome-meridiem {
+  color: var(--tx3);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
 .mmm-mirror-os__chrome-date {
   color: var(--tx3);
   font-size: 12px;
@@ -338,12 +352,23 @@
 }
 
 .home-time {
+  align-items: baseline;
   color: var(--tx1);
+  display: flex;
   font-size: 160px;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
+  gap: 18px;
   letter-spacing: -0.045em;
   line-height: 1;
+}
+
+.home-time-meridiem {
+  color: var(--tx3);
+  font-family: var(--mono);
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .home-dateline {

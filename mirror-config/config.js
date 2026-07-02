@@ -36,7 +36,7 @@ let config = {
             lastCommandSource: "system"
           },
           rotation: {
-            intervalSeconds: 45
+            intervalSeconds: 25
           },
           dataSources: {
             agentSnapshot: {

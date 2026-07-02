@@ -18,8 +18,10 @@ Module.register("MMM-AgentSurface", {
     this.rotationTimer = null;
     this.chromeClockTimer = null;
     this.chromeClockTime = null;
+    this.chromeClockMeridiem = null;
     this.chromeClockDate = null;
     this.homeClockTime = null;
+    this.homeClockMeridiem = null;
     this.shell = window.MMMAgentSurfaceMirrorOsShell
       ? window.MMMAgentSurfaceMirrorOsShell.createMirrorOsShell(this.config.mirrorOs || {})
       : null;
@@ -256,6 +258,7 @@ Module.register("MMM-AgentSurface", {
     var viewModel = this.shell.pageViewModel(this.shell.currentPage(), { payloadStates: this.payloadStates, now: Date.now() });
     if (!viewModel) viewModel = this.shell.pageViewModel("home", { payloadStates: this.payloadStates, now: Date.now() });
     this.homeClockTime = null;
+    this.homeClockMeridiem = null;
 
     wrapper.appendChild(this.renderChromeBar(viewModel));
 
@@ -304,15 +307,22 @@ Module.register("MMM-AgentSurface", {
 
     var clock = document.createElement("div");
     clock.className = "mmm-mirror-os__chrome-clock";
-    var time = document.createElement("div");
+    var timeRow = document.createElement("div");
+    timeRow.className = "mmm-mirror-os__chrome-time-row";
+    var time = document.createElement("span");
     time.className = "mmm-mirror-os__chrome-time";
+    var meridiem = document.createElement("span");
+    meridiem.className = "mmm-mirror-os__chrome-meridiem";
+    timeRow.appendChild(time);
+    timeRow.appendChild(meridiem);
     var date = document.createElement("div");
     date.className = "mmm-mirror-os__chrome-date";
-    clock.appendChild(time);
+    clock.appendChild(timeRow);
     clock.appendChild(date);
     chrome.appendChild(clock);
 
     this.chromeClockTime = time;
+    this.chromeClockMeridiem = meridiem;
     this.chromeClockDate = date;
     this.updateChromeClockText();
 
@@ -335,13 +345,21 @@ Module.register("MMM-AgentSurface", {
   updateChromeClockText: function () {
     var now = new Date();
     var time = this.formatClockTime(now);
-    if (this.chromeClockTime) this.chromeClockTime.textContent = time;
+    if (this.chromeClockTime) this.chromeClockTime.textContent = time.text;
     if (this.chromeClockDate) this.chromeClockDate.textContent = this.formatChromeDate(now);
-    if (this.homeClockTime) this.homeClockTime.textContent = time;
+    if (this.homeClockTime) this.homeClockTime.textContent = time.text;
+    if (this.homeClockMeridiem) this.homeClockMeridiem.textContent = time.meridiem;
+    if (this.chromeClockMeridiem) this.chromeClockMeridiem.textContent = time.meridiem;
   },
 
   formatClockTime: function (date) {
-    return String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+    var hours = date.getHours();
+    var meridiem = hours >= 12 ? "PM" : "AM";
+    var hour12 = hours % 12 || 12;
+    return {
+      text: String(hour12) + ":" + String(date.getMinutes()).padStart(2, "0"),
+      meridiem: meridiem
+    };
   },
 
   formatChromeDate: function (date) {
@@ -944,8 +962,15 @@ Module.register("MMM-AgentSurface", {
 
     var time = document.createElement("div");
     time.className = "home-time";
+    var timeDigits = document.createElement("span");
+    timeDigits.className = "home-time-digits";
+    var timeMeridiem = document.createElement("span");
+    timeMeridiem.className = "home-time-meridiem";
+    time.appendChild(timeDigits);
+    time.appendChild(timeMeridiem);
     clockCell.appendChild(time);
-    this.homeClockTime = time;
+    this.homeClockTime = timeDigits;
+    this.homeClockMeridiem = timeMeridiem;
 
     var dateLine = document.createElement("div");
     dateLine.className = "home-dateline";

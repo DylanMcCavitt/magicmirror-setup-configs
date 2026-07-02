@@ -91,7 +91,7 @@ scenario("navigation follows configured registry cycle", () => {
 scenario("dwell seconds honor default override and clamp", () => {
   const config = agentSurfaceMirrorOsConfig();
   const shell = shellApi.createMirrorOsShell(config);
-  assert.equal(shell.dwellSeconds("home"), 45);
+  assert.equal(shell.dwellSeconds("home"), 25);
 
   const overridden = shellApi.createMirrorOsShell({
     ...config,

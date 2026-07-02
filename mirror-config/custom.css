@@ -1,7 +1,5 @@
-.MMM-AgentSurface {
-  max-width: 34rem;
-}
-
+/* MMM-AgentSurface owns the full fullscreen_below canvas; all styling lives in
+   custom_modules/MMM-AgentSurface/MMM-AgentSurface.css. */
 .MMM-AgentSurface .module-header {
-  margin-bottom: 0.5rem;
+  display: none;
 }

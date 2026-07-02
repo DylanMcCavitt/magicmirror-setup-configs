@@ -18,10 +18,6 @@ let config = {
       position: "top_bar"
     },
     {
-      module: "clock",
-      position: "top_left"
-    },
-    {
       module: "MMM-AgentSurface",
       position: "fullscreen_below",
       config: {
@@ -40,7 +36,7 @@ let config = {
             lastCommandSource: "system"
           },
           rotation: {
-            intervalSeconds: 45
+            intervalSeconds: 25
           },
           dataSources: {
             agentSnapshot: {

@@ -354,6 +354,11 @@ Module.register("MMM-AgentSurface", {
         return body;
       }
 
+      if (viewModel.pageId === "sports") {
+        body.appendChild(this.renderSportsPage(viewModel));
+        return body;
+      }
+
       body.appendChild(this.renderEmptyRow("No renderer for this page yet"));
       return body;
     }
@@ -601,6 +606,84 @@ Module.register("MMM-AgentSurface", {
     } catch (error) {
       return dateString;
     }
+  },
+
+  renderSportsPage: function (viewModel) {
+    var container = document.createElement("div");
+    container.className = "mmm-mirror-os__sports";
+
+    var result = this.sourceData[viewModel.dataSourceId] || {};
+    var data = result.data || {};
+    var warnings = Array.isArray(data.warnings) ? data.warnings : [];
+    var games = Array.isArray(data.games) ? data.games : [];
+
+    if (warnings.length > 0) {
+      var warning = document.createElement("div");
+      warning.className = "mmm-mirror-os__sports-warning";
+      warning.textContent = "Unavailable: " + warnings.join(", ").toUpperCase();
+      container.appendChild(warning);
+    }
+
+    if (games.length === 0) {
+      container.appendChild(this.renderEmptyRow("No configured-team games on the current ESPN scoreboard."));
+      return container;
+    }
+
+    games.forEach(function (game) {
+      container.appendChild(this.renderSportsGameRow(game));
+    }, this);
+
+    return container;
+  },
+
+  renderSportsGameRow: function (game) {
+    var away = game.awayTeam || {};
+    var home = game.homeTeam || {};
+    var row = document.createElement("div");
+    row.className = "mmm-mirror-os__sports-row mmm-mirror-os__sports-row--" + this.safeClassPart(game.status);
+
+    var league = document.createElement("div");
+    league.className = "mmm-mirror-os__sports-league";
+    league.textContent = String(game.league || "").toUpperCase();
+    row.appendChild(league);
+
+    var matchup = document.createElement("div");
+    matchup.className = "mmm-mirror-os__sports-matchup";
+
+    var matchupLine = document.createElement("div");
+    matchupLine.className = "mmm-mirror-os__sports-matchup-line";
+
+    var awayAbbr = document.createElement("strong");
+    awayAbbr.textContent = away.abbr || away.name || "--";
+    matchupLine.appendChild(awayAbbr);
+
+    var separator = document.createElement("span");
+    separator.className = "mmm-mirror-os__sports-separator";
+    separator.textContent = " @ ";
+    matchupLine.appendChild(separator);
+
+    var homeAbbr = document.createElement("strong");
+    homeAbbr.textContent = home.abbr || home.name || "--";
+    matchupLine.appendChild(homeAbbr);
+    matchup.appendChild(matchupLine);
+
+    var names = document.createElement("div");
+    names.className = "mmm-mirror-os__sports-names";
+    names.textContent = [away.name, home.name].filter(Boolean).join(" at ");
+    matchup.appendChild(names);
+    row.appendChild(matchup);
+
+    var score = document.createElement("div");
+    score.className = "mmm-mirror-os__sports-score";
+    score.textContent = String(away.score || "0") + "–" + String(home.score || "0");
+    row.appendChild(score);
+
+    var status = document.createElement("div");
+    status.className = "mmm-mirror-os__sports-status";
+    status.textContent = game.statusDetail || game.status || "";
+    row.appendChild(status);
+
+    return row;
   },
 
   renderHomeSummary: function (viewModel) {

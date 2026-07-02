@@ -658,3 +658,57 @@
 .mmm-agent-surface__updated-age {
   color: #9aa3ad;
 }
+
+.mmm-mirror-os__home {
+  display: grid;
+  gap: 18px;
+}
+
+.mmm-mirror-os__home-top {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  gap: 8px;
+  padding: 6px 0 18px;
+}
+
+.mmm-mirror-os__home-date {
+  color: #f7f7f2;
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.mmm-mirror-os__home-label {
+  color: #9aa3ad;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__home-next {
+  color: #54c6eb;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__home-readiness {
+  display: grid;
+  gap: 0;
+}
+
+.mmm-mirror-os__home-readiness-summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f7f7f2;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__home-source-row {
+  min-height: 34px;
+  padding: 6px 0;
+}

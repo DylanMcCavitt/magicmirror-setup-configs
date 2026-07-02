@@ -31,6 +31,9 @@ let config = {
         mirrorOs: {
           pages: ["home", "agents", "calendar", "weather", "path", "sports"],
           initialPage: "home",
+          home: {
+            label: ""
+          },
           pageState: {
             currentPageId: "home",
             rotationPaused: false,

@@ -16,6 +16,7 @@
     "check:weather": "node scripts/check-weather.mjs",
     "check:sports": "node scripts/check-sports.mjs",
     "check:agents-view": "node scripts/check-agents-view.mjs",
+    "check:home-view": "node scripts/check-home-view.mjs",
     "collect:omp-stats": "node scripts/collect-omp-stats.mjs",
     "upload:snapshot": "node scripts/upload-agent-snapshot.mjs",
     "vercel:serve": "node vercel/status-server.mjs",

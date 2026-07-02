@@ -53,7 +53,7 @@ Module.register("MMM-AgentSurface", {
   },
 
   getScripts: function () {
-    return [this.file("display-sanitizer.js"), this.file("mirror-os-shell.js"), this.file("agents-view.js")];
+    return [this.file("display-sanitizer.js"), this.file("mirror-os-shell.js"), this.file("agents-view.js"), this.file("home-view.js")];
   },
 
   clearRotationTimer: function () {
@@ -743,39 +743,83 @@ Module.register("MMM-AgentSurface", {
     return container;
   },
   renderHomeSummary: function (viewModel) {
-    var panel = document.createElement("div");
-    panel.className = "mmm-mirror-os__summary-panel";
+    if (!window.MMMAgentSurfaceHomeView || typeof window.MMMAgentSurfaceHomeView.deriveHomeView !== "function") {
+      return this.renderMessage("error", "Home view unavailable.");
+    }
 
-    var message = document.createElement("div");
-    message.className = "mmm-mirror-os__summary-message";
-    message.textContent = viewModel.message;
-    panel.appendChild(message);
-
-    var list = document.createElement("div");
-    list.className = "mmm-mirror-os__source-list";
-
-    this.shell.rotationOrder().forEach(function (pageId) {
+    var rotationOrder = this.shell.rotationOrder();
+    var sourceStates = [];
+    rotationOrder.forEach(function (pageId) {
       if (pageId === "home") return;
       var sourceView = this.shell.pageViewModel(pageId, { payloadStates: this.payloadStates, now: Date.now() });
-      if (!sourceView) return;
+      if (sourceView) sourceStates.push(sourceView);
+    }, this);
 
+    return this.renderHomePage(window.MMMAgentSurfaceHomeView.deriveHomeView({
+      now: new Date(),
+      homeConfig: this.config.mirrorOs && this.config.mirrorOs.home,
+      rotationOrder: rotationOrder,
+      currentPageId: viewModel.pageId,
+      dwellSeconds: this.shell.dwellSeconds(viewModel.pageId),
+      sourceStates: sourceStates
+    }));
+  },
+
+  renderHomePage: function (homeView) {
+    var panel = document.createElement("div");
+    panel.className = "mmm-mirror-os__home";
+
+    var top = document.createElement("div");
+    top.className = "mmm-mirror-os__home-top";
+
+    var dateLine = document.createElement("div");
+    dateLine.className = "mmm-mirror-os__home-date";
+    dateLine.textContent = homeView.dateLine;
+    top.appendChild(dateLine);
+
+    if (homeView.label) {
+      var label = document.createElement("div");
+      label.className = "mmm-mirror-os__home-label";
+      label.textContent = homeView.label;
+      top.appendChild(label);
+    }
+
+    var next = document.createElement("div");
+    next.className = "mmm-mirror-os__home-next";
+    next.textContent = "Next: " + homeView.nextPage.label + " · " + homeView.nextPage.dwellSeconds + "s dwell";
+    top.appendChild(next);
+
+    panel.appendChild(top);
+
+    var readiness = document.createElement("div");
+    readiness.className = "mmm-mirror-os__home-readiness";
+
+    var summary = document.createElement("div");
+    summary.className = "mmm-mirror-os__home-readiness-summary";
+    summary.textContent = homeView.readiness.readyCount + " of " + homeView.readiness.totalCount + " sources ready";
+    readiness.appendChild(summary);
+
+    var list = document.createElement("div");
+    list.className = "mmm-mirror-os__source-list mmm-mirror-os__home-source-list";
+    homeView.readiness.rows.forEach(function (source) {
       var row = document.createElement("div");
-      row.className = "mmm-mirror-os__source-row mmm-mirror-os__source-row--" + this.safeClassPart(sourceView.state);
+      row.className = "mmm-mirror-os__source-row mmm-mirror-os__home-source-row mmm-mirror-os__source-row--" + this.safeClassPart(source.state);
 
-      var label = document.createElement("span");
-      label.className = "mmm-mirror-os__source-label";
-      label.textContent = sourceView.label;
-      row.appendChild(label);
+      var sourceLabel = document.createElement("span");
+      sourceLabel.className = "mmm-mirror-os__source-label";
+      sourceLabel.textContent = source.label;
+      row.appendChild(sourceLabel);
 
       var state = document.createElement("span");
       state.className = "mmm-mirror-os__source-state";
-      state.textContent = sourceView.glyph + " " + sourceView.state;
+      state.textContent = source.glyph + " " + source.state;
       row.appendChild(state);
 
       list.appendChild(row);
     }, this);
 
-    panel.appendChild(list);
+    readiness.appendChild(list);
+    panel.appendChild(readiness);
     return panel;
   },
 

@@ -3,5 +3,6 @@
 module.exports = [
   require("./calendar-ics.js"),
   require("./weather-open-meteo.js"),
-  require("./sports-espn.js")
+  require("./sports-espn.js"),
+  require("./path-gtfs-rt.js")
 ];

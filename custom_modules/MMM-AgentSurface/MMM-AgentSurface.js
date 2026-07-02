@@ -359,6 +359,11 @@ Module.register("MMM-AgentSurface", {
         return body;
       }
 
+      if (viewModel.pageId === "path") {
+        body.appendChild(this.renderPathPage(viewModel));
+        return body;
+      }
+
       body.appendChild(this.renderEmptyRow("No renderer for this page yet"));
       return body;
     }
@@ -686,6 +691,57 @@ Module.register("MMM-AgentSurface", {
     return row;
   },
 
+  renderPathPage: function (viewModel) {
+    var container = document.createElement("div");
+    container.className = "mmm-mirror-os__path";
+
+    var result = this.sourceData[viewModel.dataSourceId] || {};
+    var data = result.data || {};
+    var departures = Array.isArray(data.departures) ? data.departures : [];
+
+    if (departures.length === 0) {
+      container.appendChild(this.renderEmptyRow("No upcoming PATH departures for the configured station."));
+      return container;
+    }
+
+    var board = document.createElement("div");
+    board.className = "mmm-mirror-os__path-board";
+
+    departures.forEach(function (departure) {
+      var row = document.createElement("div");
+      row.className = "mmm-mirror-os__path-row" + (departure.minutes <= 2 ? " mmm-mirror-os__path-row--soon" : "");
+
+      var details = document.createElement("div");
+      details.className = "mmm-mirror-os__path-details";
+
+      var route = document.createElement("div");
+      route.className = "mmm-mirror-os__path-route";
+      route.textContent = departure.routeLabel || departure.routeId || "PATH";
+      details.appendChild(route);
+
+      var destination = document.createElement("div");
+      destination.className = "mmm-mirror-os__path-destination";
+      destination.textContent = departure.destination || departure.headsign || "Next departure";
+      details.appendChild(destination);
+
+      row.appendChild(details);
+
+      var minutes = document.createElement("div");
+      minutes.className = "mmm-mirror-os__path-minutes";
+      minutes.textContent = String(departure.minutes);
+      row.appendChild(minutes);
+
+      var unit = document.createElement("div");
+      unit.className = "mmm-mirror-os__path-unit";
+      unit.textContent = "min";
+      row.appendChild(unit);
+
+      board.appendChild(row);
+    });
+
+    container.appendChild(board);
+    return container;
+  },
   renderHomeSummary: function (viewModel) {
     var panel = document.createElement("div");
     panel.className = "mmm-mirror-os__summary-panel";

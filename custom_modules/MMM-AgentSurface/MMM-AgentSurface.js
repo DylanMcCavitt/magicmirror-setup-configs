@@ -1271,14 +1271,14 @@ Module.register("MMM-AgentSurface", {
       var weatherData = weatherResult.data || {};
       var current = weatherData.current || {};
       var feels = current.apparentF !== null && current.apparentF !== undefined ? "FEELS " + this.formatWeatherNumber(current.apparentF) + "°" : this.formatWeekday(now);
-      return [feels, this.formatShortMonthDate(now) + " · " + this.formatClockTime(now)];
+      return [feels, this.formatShortMonthDate(now) + " · " + this.formatClockTimeLabel(now)];
     }
     if (viewModel.pageId === "path") {
       var pathResult = this.sourceData[viewModel.dataSourceId] || {};
-      return [this.formatClockTime(now), "AS OF " + (this.formatRelativeAge(pathResult.updatedAt) || "UNKNOWN")];
+      return [this.formatClockTimeLabel(now), "AS OF " + (this.formatRelativeAge(pathResult.updatedAt) || "UNKNOWN")];
     }
     if (viewModel.pageId === "sports") {
-      return [this.formatWeekday(now), this.formatShortMonthDate(now) + " · " + this.formatClockTime(now)];
+      return [this.formatWeekday(now), this.formatShortMonthDate(now) + " · " + this.formatClockTimeLabel(now)];
     }
     return [];
   },
@@ -1291,7 +1291,12 @@ Module.register("MMM-AgentSurface", {
   formatDateTimeStamp: function (value) {
     var date = value instanceof Date ? value : new Date(value);
     if (!Number.isFinite(date.getTime())) return "";
-    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " · " + this.formatClockTime(date);
+    return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " · " + this.formatClockTimeLabel(date);
+  },
+
+  formatClockTimeLabel: function (date) {
+    var time = this.formatClockTime(date);
+    return time.text + " " + time.meridiem;
   },
 
   formatWeekday: function (date) {

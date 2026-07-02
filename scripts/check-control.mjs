@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import fs from "node:fs";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -19,8 +20,17 @@ function fakeResponse() {
   return {
     statusCode: 200,
     body: undefined,
+    headers: {},
     status(code) {
       this.statusCode = code;
+      return this;
+    },
+    set(name, value) {
+      this.headers[name.toLowerCase()] = value;
+      return this;
+    },
+    send(body) {
+      this.body = body;
       return this;
     },
     json(body) {
@@ -65,11 +75,14 @@ function loadHelper() {
     require(name) {
       if (name === "node_helper") return fakeNodeHelper;
       if (name === "crypto") return crypto;
+      if (name === "fs") return fs;
+      if (name === "path") return path;
       if (name === "./mirror-os-shell.js") return requireMirrorOsShell();
       // Control checks must not exercise real data-source collectors.
       if (name === "./providers/index.js") return [];
       throw new Error(`unexpected require: ${name}`);
-    }
+    },
+    __dirname: path.join(repoRoot, "custom_modules/MMM-AgentSurface")
   };
   vm.runInNewContext(readFileSync(helperPath, "utf8"), sandbox, { filename: helperPath });
   const helper = sandbox.module.exports;
@@ -219,6 +232,47 @@ try {
     assert.equal(wrongMethodOnState.statusCode, 405, "POST must not reach the state GET handler");
     const unknownPath = await dispatch(routes, "POST", "/MMM-AgentSurface/api/nope", fakeRequest({ headers: authHeaders() }));
     assert.equal(unknownPath.statusCode, 404);
+  });
+
+  await scenario("state exposes the page registry fail-closed", async () => {
+    const { helper, routes } = loadHelper();
+    const before = await dispatch(routes, "GET", "/MMM-AgentSurface/api/control/state", fakeRequest({ headers: authHeaders() }));
+    assert.equal(before.statusCode, 200);
+    assert.equal(before.body.pages, null, "pages must be null until the display module reports its registry");
+    reportPages(helper, { pages: ["home", "agents", "path"] });
+    const after = await dispatch(routes, "GET", "/MMM-AgentSurface/api/control/state", fakeRequest({ headers: authHeaders() }));
+    assert.equal(after.statusCode, 200);
+    // JSON round-trip: helper objects come from a separate vm realm, so
+    // strict deepEqual would fail on prototype identity alone.
+    assert.equal(JSON.stringify(after.body.pages), JSON.stringify([
+      { id: "home", label: "Home" },
+      { id: "agents", label: "Agents" },
+      { id: "path", label: "PATH" }
+    ]));
+  });
+
+  await scenario("remote page is served as static HTML without secrets", async () => {
+    const { routes } = loadHelper();
+    // The shell itself is unauthenticated by design: it must carry no data
+    // and no token material — everything stateful goes through the control API.
+    const res = await dispatch(routes, "GET", "/MMM-AgentSurface/remote", fakeRequest());
+    assert.equal(res.statusCode, 200);
+    assert.match(res.headers["content-type"], /text\/html/);
+    assert.match(res.body, /<!doctype html>/i);
+    assert.ok(!res.body.includes(process.env.MIRROR_CONTROL_TOKEN), "remote HTML must not embed the control token");
+    assert.match(res.body, /\/MMM-AgentSurface\/api\/control/, "remote must target the authenticated control API");
+    const wrongMethod = await dispatch(routes, "POST", "/MMM-AgentSurface/remote", fakeRequest());
+    assert.equal(wrongMethod.statusCode, 405);
+  });
+
+  await scenario("remote page never weakens control auth", async () => {
+    const { helper, routes } = loadHelper();
+    reportPages(helper);
+    await dispatch(routes, "GET", "/MMM-AgentSurface/remote", fakeRequest());
+    const noAuthState = await dispatch(routes, "GET", "/MMM-AgentSurface/api/control/state", fakeRequest());
+    assert.equal(noAuthState.statusCode, 401, "state must stay closed without a token even after the remote shell is served");
+    const noAuthCommand = await dispatch(routes, "POST", "/MMM-AgentSurface/api/control", fakeRequest({ body: { command: "pause" } }));
+    assert.equal(noAuthCommand.statusCode, 401, "control must stay closed without a token even after the remote shell is served");
   });
 
   console.log(JSON.stringify({ ok: true, scenarios }));

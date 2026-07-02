@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Mirror OS Remote</title>
+<style>
+  :root {
+    --bg: #000;
+    --bg2: #0a0a0a;
+    --bg3: #111111;
+    --line: #262626;
+    --line2: #3a3a3a;
+    --tx1: #f7f7f2;
+    --tx2: #9aa3ad;
+    --tx3: #6b7280;
+    --accent: #54c6eb;
+    --accent-bg: rgba(84, 198, 235, 0.1);
+    --warn: #e0a83c;
+    --bad: #e05c5c;
+    --mono: "Courier New", Courier, monospace;
+    --sans: Inter, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--tx1); font-family: var(--sans); }
+  body { min-height: 100vh; max-width: 520px; margin: 0 auto; padding: 16px 16px 40px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; color: var(--tx3); text-transform: uppercase; }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 4px 0 16px; }
+  .panel { border: 1px solid var(--line); background: var(--bg2); margin-bottom: 14px; }
+  .panel-bar { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tx3); border-bottom: 1px solid var(--line); padding: 8px 12px; }
+  .panel-body { padding: 12px; }
+  .status-row { display: flex; justify-content: space-between; gap: 8px; font-family: var(--mono); font-size: 14px; padding: 4px 0; }
+  .status-row .k { color: var(--tx3); }
+  .status-row .v { color: var(--tx1); text-transform: uppercase; }
+  .v.ok { color: var(--accent); }
+  .v.warn { color: var(--warn); }
+  .v.bad { color: var(--bad); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  button { appearance: none; border: 0; border-radius: 0; background: transparent; color: var(--tx1); font-family: var(--mono); cursor: pointer; }
+  button:disabled { color: var(--tx3); cursor: default; }
+  .page-btn { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 18px 10px; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .page-btn.active { background: var(--accent-bg); color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cmd-btn { border: 1px solid var(--line2); padding: 14px 10px; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--bg3); }
+  .cmd-btn:disabled { border-color: var(--line); background: var(--bg2); }
+  .note { font-family: var(--mono); font-size: 12px; color: var(--tx3); padding: 10px 2px 0; min-height: 1.4em; }
+  .note.bad { color: var(--bad); }
+  input[type="password"] { width: 100%; background: var(--bg3); border: 1px solid var(--line2); color: var(--tx1); font-family: var(--mono); font-size: 14px; padding: 12px 10px; margin-bottom: 10px; }
+  input[type="password"]:focus { outline: 1px solid var(--accent); }
+  .token-btn { border: 1px solid var(--accent); color: var(--accent); padding: 12px 10px; width: 100%; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="eyebrow">// MIRROR OS</div>
+  <h1>Remote</h1>
+
+  <section class="panel" id="token-panel">
+    <div class="panel-bar">// ACCESS</div>
+    <div class="panel-body">
+      <input id="token-input" type="password" autocomplete="off" placeholder="control token">
+      <button class="token-btn" id="token-save">Connect</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-bar">// STATUS</div>
+    <div class="panel-body">
+      <div class="status-row"><span class="k">LINK</span><span class="v" id="st-link">&mdash;</span></div>
+      <div class="status-row"><span class="k">PAGE</span><span class="v" id="st-page">&mdash;</span></div>
+      <div class="status-row"><span class="k">ROTATION</span><span class="v" id="st-rotation">&mdash;</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-bar">// PAGES</div>
+    <div class="grid" id="page-grid"></div>
+  </section>
+
+  <div class="row2">
+    <button class="cmd-btn" id="btn-pause">Pause</button>
+    <button class="cmd-btn" id="btn-resume">Resume</button>
+  </div>
+  <div class="note" id="note"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var API_BASE = "/MMM-AgentSurface/api/control";
+  var TOKEN_KEY = "mirror-remote-token";
+  var POLL_MS = 3000;
+
+  var els = {
+    tokenPanel: document.getElementById("token-panel"),
+    tokenInput: document.getElementById("token-input"),
+    tokenSave: document.getElementById("token-save"),
+    link: document.getElementById("st-link"),
+    page: document.getElementById("st-page"),
+    rotation: document.getElementById("st-rotation"),
+    grid: document.getElementById("page-grid"),
+    pause: document.getElementById("btn-pause"),
+    resume: document.getElementById("btn-resume"),
+    note: document.getElementById("note")
+  };
+
+  var token = "";
+  try { token = window.localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { token = ""; }
+  var lastState = null;
+  var lastPages = null;
+  var pollTimer = null;
+
+  function setLink(text, cls) {
+    els.link.textContent = text;
+    els.link.className = "v " + cls;
+  }
+
+  function setNote(text, bad) {
+    els.note.textContent = text || "";
+    els.note.className = bad ? "note bad" : "note";
+  }
+
+  function headers() {
+    return { "Content-Type": "application/json", Authorization: "Bearer " + token };
+  }
+
+  function renderLocked(reason) {
+    lastState = null;
+    els.tokenPanel.classList.remove("hidden");
+    els.page.textContent = "\u2014";
+    els.page.className = "v";
+    els.rotation.textContent = "\u2014";
+    els.rotation.className = "v";
+    els.grid.textContent = "";
+    lastPages = null; // grid was cleared; force a rebuild on reconnect
+    els.pause.disabled = true;
+    els.resume.disabled = true;
+    setNote(reason || "", true);
+  }
+
+  function pagesChanged(pages) {
+    if (!lastPages || !pages || lastPages.length !== pages.length) return true;
+    for (var i = 0; i < pages.length; i += 1) {
+      if (lastPages[i].id !== pages[i].id || lastPages[i].label !== pages[i].label) return true;
+    }
+    return false;
+  }
+
+  function renderPages(pages, currentPageId) {
+    if (pagesChanged(pages)) {
+      els.grid.textContent = "";
+      lastPages = pages;
+      if (!pages) return;
+      pages.forEach(function (pageEntry) {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "page-btn";
+        btn.dataset.pageId = pageEntry.id;
+        btn.textContent = pageEntry.label;
+        btn.addEventListener("click", function () {
+          sendCommand({ command: "show", pageId: pageEntry.id });
+        });
+        els.grid.appendChild(btn);
+      });
+    }
+    var buttons = els.grid.querySelectorAll(".page-btn");
+    buttons.forEach(function (btn) {
+      btn.className = btn.dataset.pageId === currentPageId ? "page-btn active" : "page-btn";
+    });
+  }
+
+  function renderState(state, pages) {
+    lastState = state;
+    els.tokenPanel.classList.add("hidden");
+    setLink("CONNECTED", "ok");
+    els.page.textContent = state.currentPageId;
+    els.page.className = "v ok";
+    els.rotation.textContent = state.rotationPaused ? "PAUSED" : "RUNNING";
+    els.rotation.className = state.rotationPaused ? "v warn" : "v ok";
+    // Only the state-changing action is pressable; the current mode is
+    // already spelled out in the ROTATION status row.
+    els.pause.disabled = state.rotationPaused;
+    els.resume.disabled = !state.rotationPaused;
+    if (pages) {
+      renderPages(pages, state.currentPageId);
+      setNote("");
+    } else {
+      els.grid.textContent = "";
+      lastPages = null;
+      setNote("page registry pending \u2014 mirror display not reported yet");
+    }
+  }
+
+  function firstError(body, fallback) {
+    if (body && Array.isArray(body.errors) && typeof body.errors[0] === "string") return body.errors[0];
+    return fallback;
+  }
+
+  async function refreshState() {
+    if (!token) {
+      setLink("NO TOKEN", "warn");
+      renderLocked("enter the mirror control token to connect");
+      return;
+    }
+    var response;
+    try {
+      response = await fetch(API_BASE + "/state", { headers: headers(), cache: "no-store" });
+    } catch (e) {
+      setLink("OFFLINE", "bad");
+      renderLocked("mirror unreachable");
+      return;
+    }
+    var body = null;
+    try { body = await response.json(); } catch (e) { body = null; }
+    if (response.status === 401) {
+      setLink("UNAUTHORIZED", "bad");
+      renderLocked("token rejected \u2014 check the control token");
+      return;
+    }
+    if (!response.ok || !body || body.ok !== true || !body.state) {
+      setLink("ERROR", "bad");
+      renderLocked(firstError(body, "mirror control unavailable"));
+      return;
+    }
+    renderState(body.state, body.pages || null);
+  }
+
+  async function sendCommand(payload) {
+    if (!token) return;
+    var response;
+    try {
+      response = await fetch(API_BASE, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      setLink("OFFLINE", "bad");
+      setNote("mirror unreachable", true);
+      return;
+    }
+    var body = null;
+    try { body = await response.json(); } catch (e) { body = null; }
+    if (!response.ok || !body || body.ok !== true) {
+      setNote(firstError(body, "command failed"), true);
+      if (response.status === 401) {
+        setLink("UNAUTHORIZED", "bad");
+        renderLocked("token rejected \u2014 check the control token");
+      }
+      return;
+    }
+    setNote("");
+    // The display applies the command asynchronously and re-reports state.
+    window.setTimeout(refreshState, 600);
+  }
+
+  function startPolling() {
+    if (pollTimer) window.clearInterval(pollTimer);
+    pollTimer = window.setInterval(refreshState, POLL_MS);
+    refreshState();
+  }
+
+  els.tokenSave.addEventListener("click", function () {
+    token = els.tokenInput.value.trim();
+    try { window.localStorage.setItem(TOKEN_KEY, token); } catch (e) { /* private mode */ }
+    els.tokenInput.value = "";
+    startPolling();
+  });
+
+  els.pause.addEventListener("click", function () { sendCommand({ command: "pause" }); });
+  els.resume.addEventListener("click", function () { sendCommand({ command: "resume" }); });
+
+  startPolling();
+})();
+</script>
+</body>
+</html>

@@ -1,9 +1,12 @@
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const NodeHelper = require("node_helper");
 const shellApi = require("./mirror-os-shell.js");
 const providers = require("./providers/index.js");
 
 const CONTROL_ROUTE_BASE = "/MMM-AgentSurface/api/control";
+const REMOTE_ROUTE = "/MMM-AgentSurface/remote";
 const CONTROL_COMMANDS = new Set(["next", "previous", "show", "pause", "resume"]);
 const PAGE_IDS = new Set(shellApi.FALLBACK_ROTATION_ORDER);
 const SAFE_STATE = {
@@ -64,6 +67,7 @@ module.exports = NodeHelper.create({
     this.validatorPromise = null;
     this.currentPageState = { ...SAFE_STATE };
     this.configuredPages = null;
+    this.remoteHtml = null;
     this.latestSourceData = {};
     this.providerTimers = [];
     this.registerRoutes();
@@ -125,6 +129,7 @@ module.exports = NodeHelper.create({
     this.expressApp.get(ROUTE_BASE + "/current", this.handleSnapshotCurrent.bind(this));
     this.expressApp.post(CONTROL_ROUTE_BASE, this.handleControlPost.bind(this));
     this.expressApp.get(CONTROL_ROUTE_BASE + "/state", this.handleControlState.bind(this));
+    this.expressApp.get(REMOTE_ROUTE, this.handleRemotePage.bind(this));
   },
 
   handleSnapshotCurrent: function (req, res) {
@@ -184,7 +189,30 @@ module.exports = NodeHelper.create({
 
   handleControlState: function (req, res) {
     if (!this.hasControlAccess(req, res)) return;
-    res.json({ ok: true, state: this.currentPageState });
+    res.json({ ok: true, state: this.currentPageState, pages: this.controlPageList() });
+  },
+
+  // Configured page registry for remote UIs: null until the display module
+  // reports its rotation order, so clients render buttons fail-closed.
+  controlPageList: function () {
+    if (!this.configuredPages || this.configuredPages.size === 0) return null;
+    return Array.from(this.configuredPages, function (pageId) {
+      return { id: pageId, label: shellApi.PAGE_LABELS[pageId] || pageId };
+    });
+  },
+
+  // Static remote shell: no data, no secrets — every stateful call the page
+  // makes goes through the token-checked control API above.
+  handleRemotePage: function (req, res) {
+    if (this.remoteHtml === null) {
+      try {
+        this.remoteHtml = fs.readFileSync(path.join(__dirname, "remote.html"), "utf8");
+      } catch (error) {
+        res.status(500).json({ ok: false, errors: ["remote page unavailable"] });
+        return;
+      }
+    }
+    res.status(200).set("Content-Type", "text/html; charset=utf-8").send(this.remoteHtml);
   },
 
   handleControlPost: async function (req, res) {

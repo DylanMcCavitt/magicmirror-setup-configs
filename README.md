@@ -61,6 +61,7 @@ npm run check:shell
 npm run check:control
 npm run check:calendar
 npm run check:sports
+npm run check:path
 ```
 
 Local snapshot validation:
@@ -92,7 +93,7 @@ Environment/source names:
 - `MIRROR_CONTROL_TOKEN` — bearer token required by the local page-control API (`POST /MMM-AgentSurface/api/control`, `GET /MMM-AgentSurface/api/control/state`); `show` commands are validated against the page set the display module actually configured and fail closed (503) until the module has reported its page registry
 - `MIRROR_CALENDAR_ICS_URL` — calendar ICS feed URL (Apple/Google shared or private ICS links work); calendar stays `unconfigured` until this is set. Optional: `MIRROR_CALENDAR_NAME` (display label), `MIRROR_CALENDAR_TIMEZONE` (IANA zone for event times). Feed URLs are never echoed in errors or on screen.
 - `MIRROR_WEATHER_LATITUDE` and `MIRROR_WEATHER_LONGITUDE` — Open-Meteo coordinate source; weather stays `unconfigured` until both are set. Optional: `MIRROR_WEATHER_TIMEZONE` (IANA zone or Open-Meteo timezone value), `MIRROR_WEATHER_LOCATION_LABEL` (display/source label).
-- `MIRROR_PATH_GTFS_RT_URL` and `MIRROR_PATH_STATION_ID` — PATH GTFS-realtime source; PATH stays `unconfigured` until both are set
+- `MIRROR_PATH_GTFS_RT_URL` and `MIRROR_PATH_STATION_ID` — PATH GTFS-realtime source; PATH stays `unconfigured` until both are set. Optional: `MIRROR_PATH_ROUTE_ID` (GTFS route_id), `MIRROR_PATH_DIRECTION` (`TO_NY` or `TO_NJ`). Research: PANYNJ publishes the static PATH GTFS IDs but does not publish an official public GTFS-realtime TripUpdates endpoint; the maintained community GTFS-RT wrapper at `https://path.transitdata.nyc/gtfsrt` uses PATH realtime APIs and matches the static GTFS station/route IDs, so use it as the configured feed URL unless you run your own proxy. The feed uses station-level stop IDs without direction suffixes; the provider exact-matches `MIRROR_PATH_STATION_ID` and also accepts `-`, `_`, or `:` suffixes if a compatible feed emits platform/direction-suffixed child stops. Grove Street -> World Trade Center example: `MIRROR_PATH_STATION_ID=26728`, `MIRROR_PATH_ROUTE_ID=862`, `MIRROR_PATH_DIRECTION=TO_NY`; World Trade Center station is `26734`.
 - `MIRROR_SPORTS_LEAGUES` and `MIRROR_SPORTS_TEAMS` — ESPN scoreboard selectors; sports stays `unconfigured` until both are set. Supported leagues: `nfl`, `mlb`, `nba`. Team selectors match ESPN team abbreviation/display name case-insensitively. Optional: `MIRROR_SPORTS_SOURCE_URL` (base ESPN API URL override), `MIRROR_SPORTS_TIMEZONE` (IANA zone for start times).
 
 Health checks:

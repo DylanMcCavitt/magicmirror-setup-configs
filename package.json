@@ -17,7 +17,8 @@
     "check:sports": "node scripts/check-sports.mjs",
     "collect:omp-stats": "node scripts/collect-omp-stats.mjs",
     "upload:snapshot": "node scripts/upload-agent-snapshot.mjs",
-    "vercel:serve": "node vercel/status-server.mjs"
+    "vercel:serve": "node vercel/status-server.mjs",
+    "check:path": "node scripts/check-path.mjs"
   },
   "engines": {
     "node": ">=20"

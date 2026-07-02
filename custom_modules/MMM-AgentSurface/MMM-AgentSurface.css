@@ -526,3 +526,63 @@
 .mmm-mirror-os__sports-row--final .mmm-mirror-os__sports-status {
   color: #9aa3ad;
 }
+
+.mmm-mirror-os__path {
+  display: grid;
+  gap: 10px;
+}
+
+.mmm-mirror-os__path-board {
+  display: grid;
+  gap: 0;
+}
+
+.mmm-mirror-os__path-row {
+  align-items: baseline;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 52px;
+  padding: 8px 0;
+}
+
+.mmm-mirror-os__path-details {
+  min-width: 0;
+}
+
+.mmm-mirror-os__path-route {
+  color: #54c6eb;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__path-destination {
+  color: #9aa3ad;
+  font-size: 15px;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.mmm-mirror-os__path-minutes {
+  color: #f7f7f2;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.mmm-mirror-os__path-unit {
+  color: #9aa3ad;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mmm-mirror-os__path-row--soon .mmm-mirror-os__path-minutes,
+.mmm-mirror-os__path-row--soon .mmm-mirror-os__path-unit {
+  color: #e0ac4a;
+}
